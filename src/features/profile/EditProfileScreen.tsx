@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useNavigation } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
@@ -30,6 +31,7 @@ export const EditProfileScreen = () => {
   const [username, setUsername] = useState(user?.username || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const [coverUri, setCoverUri] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const handlePickAvatar = async () => {
@@ -45,22 +47,55 @@ export const EditProfileScreen = () => {
     }
   };
 
+  const handlePickCover = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets[0]) {
+      setCoverUri(result.assets[0].uri);
+    }
+  };
+
   const handleSave = async () => {
     try {
       setIsSaving(true);
 
-      // 1. Upload new avatar if selected
+      // 1. Upload new cover if selected
+      if (coverUri) {
+        const ext = coverUri.split('.').pop() || 'jpg';
+        const coverFormData = new FormData();
+        // @ts-ignore
+        coverFormData.append('cover', {
+          uri: coverUri,
+          type: `image/${ext}`,
+          name: `cover-${Date.now()}.${ext}`,
+        });
+
+        const coverRes = await apiClient.put('/auth/profile/cover', coverFormData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        if (coverRes.data.user) {
+          updateUser(coverRes.data.user);
+        }
+      }
+
+      // 2. Upload new avatar if selected
       if (avatarUri) {
         const ext = avatarUri.split('.').pop() || 'jpg';
-        const formData = new FormData();
+        const avatarFormData = new FormData();
         // @ts-ignore
-        formData.append('avatar', {
+        avatarFormData.append('avatar', {
           uri: avatarUri,
           type: `image/${ext}`,
           name: `avatar-${Date.now()}.${ext}`,
         });
 
-        const avatarRes = await apiClient.put('/auth/profile/avatar', formData, {
+        const avatarRes = await apiClient.put('/auth/profile/avatar', avatarFormData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
 
@@ -69,7 +104,7 @@ export const EditProfileScreen = () => {
         }
       }
 
-      // 2. Update bio & username
+      // 3. Update bio & username
       const profileRes = await apiClient.put('/auth/profile', {
         bio: bio.trim(),
         username: username.trim(),
@@ -82,7 +117,10 @@ export const EditProfileScreen = () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.profile(user?._id || '') });
       navigation.goBack();
     } catch (err: any) {
-      Alert.alert('Save failed', err.response?.data?.message || err.message || 'Error updating profile');
+      Alert.alert(
+        'Save failed',
+        err.response?.data?.message || err.message || 'Error updating profile'
+      );
     } finally {
       setIsSaving(false);
     }
@@ -112,12 +150,37 @@ export const EditProfileScreen = () => {
       />
 
       <ScrollView style={styles.content} keyboardShouldPersistTaps="handled">
-        {/* Avatar upload */}
+        {/* Cover Photo Upload */}
+        <View style={styles.coverSection}>
+          <TouchableOpacity
+            activeOpacity={0.85}
+            onPress={handlePickCover}
+            style={styles.coverWrapper}
+          >
+            {coverUri || user?.coverImage ? (
+              <Image
+                source={{ uri: coverUri || user?.coverImage }}
+                style={styles.coverImage}
+                contentFit="cover"
+              />
+            ) : (
+              <View style={styles.coverPlaceholder}>
+                <Ionicons name="image-outline" size={32} color={darkTheme.fgMuted} />
+                <Text style={styles.coverPlaceholderText}>Add cover photo</Text>
+              </View>
+            )}
+            <View style={styles.coverCameraOverlay}>
+              <Ionicons name="camera" size={18} color="#ffffff" />
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Avatar Upload */}
         <View style={styles.avatarSection}>
           <TouchableOpacity activeOpacity={0.8} onPress={handlePickAvatar} style={styles.avatarPicker}>
-            <Avatar uri={avatarUri || user?.avatar} name={user?.username} size={90} />
+            <Avatar uri={avatarUri || user?.avatar} name={user?.username} size={84} />
             <View style={styles.cameraOverlay}>
-              <Ionicons name="camera" size={22} color="#ffffff" />
+              <Ionicons name="camera" size={20} color="#ffffff" />
             </View>
           </TouchableOpacity>
           <Text style={styles.changePhotoText}>Change profile photo</Text>
@@ -159,8 +222,7 @@ const styles = StyleSheet.create({
     backgroundColor: darkTheme.bg,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
+    flex: 1,
   },
   saveBtn: {
     backgroundColor: darkTheme.accent,
@@ -173,21 +235,61 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
   },
+  coverSection: {
+    marginBottom: 16,
+  },
+  coverWrapper: {
+    width: '100%',
+    height: 140,
+    backgroundColor: darkTheme.surface,
+    position: 'relative',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  coverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  coverPlaceholder: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  coverPlaceholderText: {
+    color: darkTheme.fgMuted,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  coverCameraOverlay: {
+    position: 'absolute',
+    bottom: 10,
+    right: 12,
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    borderRadius: 18,
+    width: 34,
+    height: 34,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   avatarSection: {
     alignItems: 'center',
-    marginBottom: 28,
+    marginTop: -42,
+    marginBottom: 24,
   },
   avatarPicker: {
     position: 'relative',
+    padding: 3,
+    backgroundColor: darkTheme.bg,
+    borderRadius: 45,
   },
   cameraOverlay: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
+    bottom: 2,
+    right: 2,
     backgroundColor: darkTheme.accent,
     borderRadius: 16,
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -195,11 +297,12 @@ const styles = StyleSheet.create({
   },
   changePhotoText: {
     color: darkTheme.accent,
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
-    marginTop: 10,
+    marginTop: 8,
   },
   fieldGroup: {
+    paddingHorizontal: 20,
     marginBottom: 20,
   },
   fieldLabel: {

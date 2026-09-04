@@ -15,6 +15,7 @@ import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
 import { PostCard } from '../../components/feed/PostCard';
 import { useAuthStore } from '../../store/authStore';
+import { usePostMutations } from '../feed/useFeed';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { darkTheme } from '../../theme/colors';
@@ -124,6 +125,19 @@ export const ProfileScreen = () => {
     </View>
   );
 
+  const { likePost, unlikePost, bookmarkPost, repostPost } = usePostMutations();
+
+  const handleLikeToggle = (postId: string) => {
+    const post = posts.find((p) => p._id === postId);
+    if (!post) return;
+    const isLiked = authUser ? post.likes.includes(authUser._id) : false;
+    if (isLiked) {
+      unlikePost(postId);
+    } else {
+      likePost(postId);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Header
@@ -151,7 +165,13 @@ export const ProfileScreen = () => {
             <PostCard
               post={item}
               currentUserId={authUser?._id}
+              onLike={handleLikeToggle}
+              onBookmark={(id) => bookmarkPost(id)}
+              onRepost={(id) => repostPost(id)}
+              onQuote={(quoted) => navigation.navigate('CreatePost', { quotedPost: quoted })}
+              onComment={(id) => navigation.navigate('PostDetail', { postId: id })}
               onPressPost={(id) => navigation.navigate('PostDetail', { postId: id })}
+              onPressAuthor={(authorId) => navigation.navigate('UserProfile', { userId: authorId })}
             />
           )}
           ListEmptyComponent={

@@ -32,6 +32,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   onRepost,
   onQuote,
   onComment,
+  onShare,
   onPressPost,
   onPressAuthor,
 }) => {

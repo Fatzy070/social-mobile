@@ -20,6 +20,7 @@ import { Avatar } from '../../components/common/Avatar';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { useAuthStore } from '../../store/authStore';
+import { usePostMutations } from './useFeed';
 import { darkTheme } from '../../theme/colors';
 import { Post, Comment } from '../../types';
 
@@ -93,6 +94,18 @@ export const PostDetailScreen = () => {
     );
   };
 
+  const { likePost, unlikePost, bookmarkPost, repostPost } = usePostMutations();
+
+  const handleLikeToggle = (targetPostId: string) => {
+    if (!post) return;
+    const isLiked = user ? post.likes.includes(user._id) : false;
+    if (isLiked) {
+      unlikePost(targetPostId);
+    } else {
+      likePost(targetPostId);
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
@@ -117,6 +130,10 @@ export const PostDetailScreen = () => {
               <PostCard
                 post={post}
                 currentUserId={user?._id}
+                onLike={handleLikeToggle}
+                onBookmark={(id) => bookmarkPost(id)}
+                onRepost={(id) => repostPost(id)}
+                onQuote={(quoted) => navigation.navigate('CreatePost', { quotedPost: quoted })}
                 onPressAuthor={(id) => navigation.navigate('UserProfile', { userId: id })}
               />
               <View style={styles.commentsDivider}>
