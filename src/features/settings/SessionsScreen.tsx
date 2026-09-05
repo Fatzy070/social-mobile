@@ -16,6 +16,7 @@ import { Header } from '../../components/common/Header';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { darkTheme } from '../../theme/colors';
+import { CardRowSkeleton } from '../../components/common/Skeleton';
 import { UserSession } from '../../types';
 
 export const SessionsScreen = () => {
@@ -74,20 +75,22 @@ export const SessionsScreen = () => {
       <View style={styles.sessionCard}>
         <View style={styles.deviceRow}>
           {getDeviceIcon(item.deviceType, item.os)}
-          <View style={styles.sessionDetails}>
-            <View style={styles.titleRow}>
+          <View style={styles.sessionDetails}>           
+         <View >
               <Text style={styles.deviceTitle}>
                 {item.browser} on {item.os}
               </Text>
-              {item.isCurrent && (
+             
+            </View>
+              <View style={styles.titleRow}>
+                <Text style={styles.sessionMeta}>
+              Last active: {timeAgo}</Text>
+               {item.isCurrent && (
                 <View style={styles.currentBadge}>
                   <Text style={styles.currentBadgeText}>This Device</Text>
                 </View>
               )}
-            </View>
-            <Text style={styles.sessionMeta}>
-              Last active: {timeAgo} · {item.ipAddress || 'Unknown IP'}
-            </Text>
+              </View>           
           </View>
         </View>
 
@@ -115,10 +118,8 @@ export const SessionsScreen = () => {
         </Text>
       </View>
 
-      {isLoading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
-        </View>
+      {isLoading && sessions.length === 0 ? (
+        <CardRowSkeleton count={3} />
       ) : sessions.length === 0 ? (
         <View style={styles.centerContainer}>
           <Text style={styles.emptyText}>No other active sessions.</Text>
@@ -203,7 +204,7 @@ const styles = StyleSheet.create({
     backgroundColor: darkTheme.accentMuted,
     borderRadius: 6,
     paddingHorizontal: 6,
-    paddingVertical: 2,
+    paddingVertical: 4,
   },
   currentBadgeText: {
     color: darkTheme.accent,

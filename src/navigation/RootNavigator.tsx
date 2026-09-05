@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Platform } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
-import { darkTheme } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 // Screens
 import { LoginScreen } from '../features/auth/LoginScreen';
@@ -16,11 +16,14 @@ import { BookmarksScreen } from '../features/feed/BookmarksScreen';
 import { SearchScreen } from '../features/feed/SearchScreen';
 import { ConversationsScreen } from '../features/messages/ConversationsScreen';
 import { ChatScreen } from '../features/messages/ChatScreen';
+import { ChatDetailsScreen } from '../features/messages/ChatDetailsScreen';
+import { ScheduledMessagesScreen } from '../features/messages/ScheduledMessagesScreen';
 import { NewChatModalScreen } from '../features/messages/NewChatModalScreen';
 import { GroupDetailsScreen } from '../features/groups/GroupDetailsScreen';
 import { NotificationsScreen } from '../features/notifications/NotificationsScreen';
 import { ProfileScreen } from '../features/profile/ProfileScreen';
 import { UserProfileScreen } from '../features/profile/UserProfileScreen';
+import { FollowListScreen } from '../features/profile/FollowListScreen';
 import { EditProfileScreen } from '../features/profile/EditProfileScreen';
 import { SettingsScreen } from '../features/settings/SettingsScreen';
 import { SessionsScreen } from '../features/settings/SessionsScreen';
@@ -29,29 +32,40 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  const { colors } = useTheme();
+
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: darkTheme.bg,
-          borderTopColor: darkTheme.border,
+          backgroundColor: colors.bg,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: 58,
-          paddingBottom: 6,
-          paddingTop: 6,
+          height: Platform.OS === 'ios' ? 86 : 66,
+          paddingBottom: Platform.OS === 'ios' ? 26 : 10,
+          paddingTop: 10,
         },
-        tabBarActiveTintColor: darkTheme.accent,
-        tabBarInactiveTintColor: darkTheme.fgMuted,
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.fgMuted,
         tabBarShowLabel: false,
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingVertical: 2,
+        },
       }}
     >
       <Tab.Screen
         name="FeedTab"
         component={FeedScreen}
         options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'home' : 'home-outline'}
+              size={27}
+              color={color}
+            />
           ),
         }}
       />
@@ -59,8 +73,12 @@ const TabNavigator = () => {
         name="SearchTab"
         component={SearchScreen}
         options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'search' : 'search-outline'} size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'search' : 'search-outline'}
+              size={27}
+              color={color}
+            />
           ),
         }}
       />
@@ -68,8 +86,12 @@ const TabNavigator = () => {
         name="NotificationsTab"
         component={NotificationsScreen}
         options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'notifications' : 'notifications-outline'} size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'notifications' : 'notifications-outline'}
+              size={27}
+              color={color}
+            />
           ),
         }}
       />
@@ -77,8 +99,12 @@ const TabNavigator = () => {
         name="MessagesTab"
         component={ConversationsScreen}
         options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'chatbubbles' : 'chatbubbles-outline'} size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'mail' : 'mail-outline'}
+              size={27}
+              color={color}
+            />
           ),
         }}
       />
@@ -86,8 +112,12 @@ const TabNavigator = () => {
         name="ProfileTab"
         component={ProfileScreen}
         options={{
-          tabBarIcon: ({ color, size, focused }) => (
-            <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name={focused ? 'person' : 'person-outline'}
+              size={27}
+              color={color}
+            />
           ),
         }}
       />
@@ -97,6 +127,7 @@ const TabNavigator = () => {
 
 export const RootNavigator = () => {
   const { isAuthenticated, isInitializing, initializeAuth } = useAuthStore();
+  const { colors } = useTheme();
 
   useEffect(() => {
     initializeAuth();
@@ -104,8 +135,8 @@ export const RootNavigator = () => {
 
   if (isInitializing) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={darkTheme.accent} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
+        <ActivityIndicator size="large" color={colors.accent} />
       </View>
     );
   }
@@ -114,7 +145,7 @@ export const RootNavigator = () => {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: darkTheme.bg },
+        contentStyle: { backgroundColor: colors.bg },
       }}
     >
       {!isAuthenticated ? (
@@ -140,8 +171,11 @@ export const RootNavigator = () => {
           <Stack.Screen name="PostDetail" component={PostDetailScreen} />
           <Stack.Screen name="Bookmarks" component={BookmarksScreen} />
           <Stack.Screen name="UserProfile" component={UserProfileScreen} />
+          <Stack.Screen name="FollowList" component={FollowListScreen} />
           <Stack.Screen name="EditProfile" component={EditProfileScreen} />
           <Stack.Screen name="Chat" component={ChatScreen} />
+          <Stack.Screen name="ChatDetails" component={ChatDetailsScreen} />
+          <Stack.Screen name="ScheduledMessages" component={ScheduledMessagesScreen} />
           <Stack.Screen name="GroupDetails" component={GroupDetailsScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
           <Stack.Screen name="Sessions" component={SessionsScreen} />
@@ -154,7 +188,6 @@ export const RootNavigator = () => {
 const styles = StyleSheet.create({
   loadingContainer: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
     justifyContent: 'center',
     alignItems: 'center',
   },

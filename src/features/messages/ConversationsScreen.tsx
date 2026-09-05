@@ -13,8 +13,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
+import { ConversationListSkeleton } from '../../components/common/Skeleton';
 import { useConversations } from './useMessages';
 import { useAuthStore } from '../../store/authStore';
+import { useTheme } from '../../theme/ThemeContext';
 import { darkTheme } from '../../theme/colors';
 import { Conversation } from '../../types';
 
@@ -24,12 +26,13 @@ export const ConversationsScreen = () => {
   const { data, isLoading, isRefetching, refetch } = useConversations();
 
   const conversations = data?.conversations || [];
+  const isInitialLoading = isLoading && conversations.length === 0;
 
   const renderItem = ({ item }: { item: Conversation }) => {
     // 1-on-1 vs Group
     const otherUser = item.isGroup
       ? null
-      : item.members.find((m) => m._id !== user?._id);
+      : item.members?.find((m) => m._id !== user?._id);
 
     const title = item.isGroup
       ? item.groupName || 'Group Chat'
@@ -89,20 +92,30 @@ export const ConversationsScreen = () => {
       <Header
         title="Messages"
         rightAction={
-          <TouchableOpacity
-            onPress={() => navigation.navigate('NewChatModal')}
-            style={styles.newChatBtn}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-          >
-            <Ionicons name="create-outline" size={22} color="#ffffff" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ScheduledMessages')}
+              style={styles.scheduledBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel="Scheduled Messages"
+            >
+              <Ionicons name="time-outline" size={20} color={darkTheme.fg} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('NewChatModal')}
+              style={styles.newChatBtn}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              accessibilityLabel="New Chat"
+            >
+              <Ionicons name="create-outline" size={20} color="#ffffff" />
+            </TouchableOpacity>
+          </View>
         }
       />
 
-      {isLoading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
-        </View>
+      {isInitialLoading ? (
+        <ConversationListSkeleton count={7} />
       ) : conversations.length === 0 ? (
         <View style={styles.centerContainer}>
           <Ionicons name="chatbubbles-outline" size={48} color={darkTheme.fgMuted} />
@@ -151,6 +164,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     marginTop: 6,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  scheduledBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: darkTheme.surface,
+    borderWidth: 1,
+    borderColor: darkTheme.border,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   newChatBtn: {
     width: 34,

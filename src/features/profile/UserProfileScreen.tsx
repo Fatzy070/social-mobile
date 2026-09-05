@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Image } from 'expo-image';
+import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Header } from '../../components/common/Header';
@@ -19,6 +20,7 @@ import { usePostMutations } from '../feed/useFeed';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { darkTheme } from '../../theme/colors';
+import { ProfileHeaderSkeleton, PostFeedSkeleton } from '../../components/common/Skeleton';
 import { Post, User } from '../../types';
 
 export const UserProfileScreen = () => {
@@ -28,6 +30,7 @@ export const UserProfileScreen = () => {
   const queryClient = useQueryClient();
 
   const userId = route.params?.userId;
+  const isOwnProfile = !userId || (authUser && (userId === authUser._id || userId === (authUser as any).id));
   const [activeTab, setActiveTab] = useState<'posts' | 'replies' | 'reposts'>('posts');
 
   const { data: user, isLoading: userLoading } = useQuery({
@@ -69,8 +72,33 @@ export const UserProfileScreen = () => {
         await apiClient.post(`/auth/users/${userId}/follow`);
       }
     },
+    onMutate: async () => {
+      if (authUser) {
+        const currentFollowing = authUser.following || [];
+        const nextFollowing = isFollowing
+          ? currentFollowing.filter((id) => id !== userId)
+          : [...currentFollowing, userId];
+        useAuthStore.getState().updateUser({ following: nextFollowing });
+      }
+
+      queryClient.setQueryData(queryKeys.user.profile(userId), (oldUser: User | undefined) => {
+        if (!oldUser || !authUser) return oldUser;
+        const oldFollowers = oldUser.followers || [];
+        const nextFollowers = isFollowing
+          ? oldFollowers.filter((id) => id !== authUser._id)
+          : [...oldFollowers, authUser._id];
+        return { ...oldUser, followers: nextFollowers };
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.user.profile(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.profile(authUser?._id || '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.followers(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.following(userId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.followers(authUser?._id || '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.following(authUser?._id || '') });
+      queryClient.invalidateQueries({ queryKey: queryKeys.user.suggested });
+      queryClient.invalidateQueries({ queryKey: queryKeys.posts.following });
     },
   });
 
@@ -104,20 +132,29 @@ export const UserProfileScreen = () => {
           <Avatar uri={user?.avatar} name={user?.username} size={80} />
         </View>
 
-        <View style={styles.actionsRow}>
-          <TouchableOpacity onPress={handleMessagePress} style={styles.messageBtn}>
-            <Text style={styles.messageBtnText}>Message</Text>
-          </TouchableOpacity>
-
+        {isOwnProfile ? (
           <TouchableOpacity
-            onPress={() => followMutation.mutate()}
-            style={[styles.followBtn, isFollowing && styles.followingBtn]}
+            onPress={() => navigation.navigate('EditProfile')}
+            style={styles.editBtn}
           >
-            <Text style={[styles.followBtnText, isFollowing && styles.followingBtnText]}>
-              {isFollowing ? 'Following' : 'Follow'}
-            </Text>
+            <Text style={styles.editBtnText}>Edit profile</Text>
           </TouchableOpacity>
-        </View>
+        ) : (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity onPress={handleMessagePress} style={styles.messageBtn}>
+              <Text style={styles.messageBtnText}>Message</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => followMutation.mutate()}
+              style={[styles.followBtn, isFollowing && styles.followingBtn]}
+            >
+              <Text style={[styles.followBtnText, isFollowing && styles.followingBtnText]}>
+                {isFollowing ? 'Following' : 'Follow'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
       <View style={styles.infoSection}>
@@ -127,14 +164,34 @@ export const UserProfileScreen = () => {
         {user?.bio ? <Text style={styles.bioText}>{user.bio}</Text> : null}
 
         <View style={styles.statsRow}>
-          <View style={styles.statItem}>
+          <TouchableOpacity
+            style={styles.statItem}
+            activeOpacity={0.7}
+            onPress={() =>
+              navigation.navigate('FollowList', {
+                userId,
+                initialTab: 'following',
+                username: user?.username,
+              })
+            }
+          >
             <Text style={styles.statNumber}>{user?.following?.length || 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
-          </View>
-          <View style={styles.statItem}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.statItem}
+            activeOpacity={0.7}
+            onPress={() =>
+              navigation.navigate('FollowList', {
+                userId,
+                initialTab: 'followers',
+                username: user?.username,
+              })
+            }
+          >
             <Text style={styles.statNumber}>{user?.followers?.length || 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -159,7 +216,8 @@ export const UserProfileScreen = () => {
     </View>
   );
 
-  const { likePost, unlikePost, bookmarkPost, repostPost } = usePostMutations();
+  const { likePost, unlikePost, bookmarkPost, repostPost, pinPost, unpinPost, deletePost } = usePostMutations();
+  const pinnedPostId = user?.pinnedPost?._id || user?.pinnedPost;
 
   const handleLikeToggle = (postId: string) => {
     const post = posts.find((p) => p._id === postId);
@@ -174,32 +232,58 @@ export const UserProfileScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header title={user?.username || 'Profile'} onBack={() => navigation.goBack()} />
+      <Header
+        title={user?.username || 'Profile'}
+        onBack={() => navigation.goBack()}
+        rightAction={
+          isOwnProfile ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Settings')}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons name="settings-outline" size={22} color={darkTheme.fg} />
+            </TouchableOpacity>
+          ) : undefined
+        }
+      />
 
       {userLoading && !user ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
+        <View style={{ flex: 1 }}>
+          <ProfileHeaderSkeleton />
+          <PostFeedSkeleton count={3} />
         </View>
       ) : (
         <FlatList
           data={posts}
           keyExtractor={(item) => item._id}
           ListHeaderComponent={renderHeader}
-          renderItem={({ item }) => (
-            <PostCard
-              post={item}
-              currentUserId={authUser?._id}
-              onLike={handleLikeToggle}
-              onBookmark={(id) => bookmarkPost(id)}
-              onRepost={(id) => repostPost(id)}
-              onQuote={(quoted) => navigation.navigate('CreatePost', { quotedPost: quoted })}
-              onComment={(id) => navigation.navigate('PostDetail', { postId: id })}
-              onPressPost={(id) => navigation.navigate('PostDetail', { postId: id })}
-            />
-          )}
+          renderItem={({ item }) => {
+            const isItemPinned = !!pinnedPostId && (item._id === pinnedPostId || item._id === pinnedPostId.toString());
+            return (
+              <PostCard
+                post={item}
+                currentUserId={authUser?._id}
+                isPinned={isItemPinned}
+                onLike={handleLikeToggle}
+                onBookmark={(id) => bookmarkPost(id)}
+                onRepost={(id) => repostPost(id)}
+                onQuote={(quoted) => navigation.navigate('CreatePost', { quotedPost: quoted })}
+                onComment={(id) => navigation.navigate('PostDetail', { postId: id })}
+                onPressPost={(id) => navigation.navigate('PostDetail', { postId: id })}
+                onPressAuthor={(authorId) => {
+                  if (authorId !== userId) {
+                    navigation.navigate('UserProfile', { userId: authorId });
+                  }
+                }}
+                onPin={isOwnProfile ? (id) => pinPost(id) : undefined}
+                onUnpin={isOwnProfile ? () => unpinPost() : undefined}
+                onDelete={isOwnProfile ? (id) => deletePost(id) : undefined}
+              />
+            );
+          }}
           ListEmptyComponent={
             postsLoading ? (
-              <ActivityIndicator size="small" color={darkTheme.accent} style={{ marginVertical: 32 }} />
+              <PostFeedSkeleton count={2} />
             ) : (
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>No {activeTab} yet</Text>
@@ -252,6 +336,18 @@ const styles = StyleSheet.create({
     padding: 3,
     backgroundColor: darkTheme.bg,
     borderRadius: 45,
+  },
+  editBtn: {
+    borderWidth: 1,
+    borderColor: darkTheme.borderStrong,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+  },
+  editBtnText: {
+    color: darkTheme.fg,
+    fontSize: 13,
+    fontWeight: '600',
   },
   actionsRow: {
     flexDirection: 'row',

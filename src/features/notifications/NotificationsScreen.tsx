@@ -14,6 +14,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
+import { NotificationListSkeleton } from '../../components/common/Skeleton';
+import { useTheme } from '../../theme/ThemeContext';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { darkTheme } from '../../theme/colors';
@@ -138,10 +140,8 @@ export const NotificationsScreen = () => {
         }
       />
 
-      {isLoading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
-        </View>
+      {isLoading && notifications.length === 0 ? (
+        <NotificationListSkeleton count={7} />
       ) : notifications.length === 0 ? (
         <View style={styles.centerContainer}>
           <Ionicons name="notifications-outline" size={48} color={darkTheme.fgMuted} />

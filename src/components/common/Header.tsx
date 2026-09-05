@@ -2,42 +2,106 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { darkTheme } from '../../theme/colors';
+import { useTheme } from '../../theme/ThemeContext';
+import { Avatar } from './Avatar';
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  avatar?: string;
   onBack?: () => void;
+  onTitlePress?: () => void;
   rightAction?: React.ReactNode;
+  showBrand?: boolean;
+  onBrandPress?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, subtitle, onBack, rightAction }) => {
+export const Header: React.FC<HeaderProps> = ({
+  title,
+  subtitle,
+  avatar,
+  onBack,
+  onTitlePress,
+  rightAction,
+  showBrand,
+  onBrandPress,
+}) => {
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
+  const isBrandHeader = showBrand ?? (!onBack && title === 'Nexus');
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.bg,
+          borderBottomColor: colors.border,
+          paddingTop: insets.top + 8,
+        },
+      ]}
+    >
       <View style={styles.content}>
+        {/* Left Section: Back Button or Interactive Brand/Menu Logo */}
         {onBack ? (
-          <TouchableOpacity onPress={onBack} style={styles.backButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Ionicons name="arrow-back" size={22} color={darkTheme.fg} />
+          <TouchableOpacity
+            onPress={onBack}
+            style={[styles.backButton, { backgroundColor: colors.surface }]}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="arrow-back" size={22} color={colors.fg} />
           </TouchableOpacity>
         ) : (
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>N</Text>
-          </View>
+          <TouchableOpacity
+            activeOpacity={0.75}
+            onPress={onBrandPress}
+            disabled={!onBrandPress}
+            style={styles.brandTrigger}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <View style={[styles.logoBadge, { backgroundColor: colors.accent, shadowColor: colors.accent }]}>
+              <Text style={styles.logoText}>N</Text>
+            </View>
+          </TouchableOpacity>
         )}
 
-        <View style={styles.titleContainer}>
-          <Text style={styles.title} numberOfLines={1}>
-            {title}
-          </Text>
-          {subtitle && (
-            <Text style={styles.subtitle} numberOfLines={1}>
-              {subtitle}
-            </Text>
-          )}
-        </View>
+        {/* Center Section */}
+        {isBrandHeader ? (
+          <TouchableOpacity
+            activeOpacity={onBrandPress ? 0.75 : 1}
+            onPress={onBrandPress}
+            disabled={!onBrandPress}
+            style={styles.brandTitleContainer}
+          >
+            <Text style={[styles.brandTitle, { color: colors.fg }]}>Nexus</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            activeOpacity={onTitlePress ? 0.7 : 1}
+            onPress={onTitlePress}
+            disabled={!onTitlePress}
+            style={styles.headerPressable}
+          >
+            {avatar !== undefined && (
+              <View style={styles.avatarContainer}>
+                <Avatar uri={avatar} name={title} size={36} />
+              </View>
+            )}
 
+            <View style={styles.titleContainer}>
+              <Text style={[styles.title, { color: colors.fg }]} numberOfLines={1}>
+                {title}
+              </Text>
+              {subtitle && (
+                <Text style={[styles.subtitle, { color: colors.fgMuted }]} numberOfLines={1}>
+                  {subtitle}
+                </Text>
+              )}
+            </View>
+          </TouchableOpacity>
+        )}
+
+        {/* Right Action Container */}
         <View style={styles.rightActionContainer}>{rightAction}</View>
       </View>
     </View>
@@ -46,9 +110,7 @@ export const Header: React.FC<HeaderProps> = ({ title, subtitle, onBack, rightAc
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: darkTheme.bg,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
     paddingBottom: 10,
     paddingHorizontal: 16,
     zIndex: 20,
@@ -57,44 +119,66 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    minHeight: 40,
+    minHeight: 42,
   },
   backButton: {
     padding: 6,
     marginRight: 8,
     borderRadius: 20,
-    backgroundColor: darkTheme.surface,
+  },
+  brandTrigger: {
+    padding: 2,
+    marginRight: 8,
   },
   logoBadge: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: darkTheme.accent,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 5,
+    elevation: 4,
   },
   logoText: {
     color: '#ffffff',
-    fontWeight: '800',
-    fontSize: 18,
+    fontWeight: '900',
+    fontSize: 22,
+    letterSpacing: -0.5,
+  },
+  brandTitleContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandTitle: {
+    fontSize: 21,
+    fontWeight: '900',
+    letterSpacing: -0.5,
   },
   titleContainer: {
     flex: 1,
     justifyContent: 'center',
   },
   title: {
-    fontSize: 17,
+    fontSize: 18,
     fontWeight: '700',
-    color: darkTheme.fg,
   },
   subtitle: {
     fontSize: 12,
-    color: darkTheme.fgMuted,
     marginTop: 1,
   },
+  headerPressable: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    marginRight: 10,
+  },
   rightActionContainer: {
-    minWidth: 32,
+    minWidth: 40,
     alignItems: 'flex-end',
     justifyContent: 'center',
   },

@@ -41,7 +41,7 @@ export const SignupScreen = () => {
       });
 
       if (data.user && data.token) {
-        await setAuth(data.user, data.token);
+        await setAuth(data.user, data.token, data.accountToken);
       }
     } catch (err: any) {
       Alert.alert('Signup Failed', err.response?.data?.message || 'Could not create account.');

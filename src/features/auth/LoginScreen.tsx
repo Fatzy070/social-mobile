@@ -40,10 +40,10 @@ export const LoginScreen = () => {
         password,
       });
 
-      console.log('[LoginScreen] Login success:', data);
+      // console.log('[LoginScreen] Login success:', data);
 
       if (data.user && data.token) {
-        await setAuth(data.user, data.token);
+        await setAuth(data.user, data.token, data.accountToken);
       }
     } catch (err: any) {
       console.error('[LoginScreen] Full login error:', {

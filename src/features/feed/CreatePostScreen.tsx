@@ -12,6 +12,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -65,38 +66,80 @@ export const CreatePostScreen = () => {
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<VisibilityType>('public');
   const [isVisibilityModalOpen, setIsVisibilityModalOpen] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<Array<{ uri: string; mimeType: string; fileName: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentVisibilityOption =
     VISIBILITY_OPTIONS.find((opt) => opt.id === visibility) || VISIBILITY_OPTIONS[0];
 
+  const getMimeTypeFromUri = (uri: string) => {
+    const ext = uri.split('.').pop()?.toLowerCase() || '';
+    if (ext === 'png') return 'image/png';
+    if (ext === 'webp') return 'image/webp';
+    if (ext === 'gif') return 'image/gif';
+    return 'image/jpeg';
+  };
+
   const pickImages = async () => {
+    console.log('[CREATE-POST-MEDIA] Image button pressed');
     if (images.length >= 4) {
-      Alert.alert('Limit reached', 'You can attach up to 4 images.');
+      Alert.alert('Limit reached', 'You can attach up to 4 images per post.');
       return;
     }
 
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission required', 'We need access to your photos to attach images.');
-      return;
-    }
+    try {
+      console.log('[CREATE-POST-MEDIA] Requesting media library permissions...');
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      console.log('[CREATE-POST-MEDIA] Permission status:', status);
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsMultipleSelection: true,
-      selectionLimit: 4 - images.length,
-      quality: 0.8,
-    });
+      if (status !== 'granted') {
+        console.warn('[CREATE-POST-MEDIA] Media library permission denied');
+        Alert.alert(
+          'Permission required',
+          'Photo library access is required to select photos for your post. Please enable it in Settings.'
+        );
+        return;
+      }
 
-    if (!result.canceled && result.assets) {
-      const newUris = result.assets.map((a) => a.uri);
-      setImages((prev) => [...prev, ...newUris].slice(0, 4));
+      console.log('[CREATE-POST-MEDIA] Opening image library');
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        allowsMultipleSelection: true,
+        selectionLimit: 4 - images.length,
+        quality: 0.8,
+      });
+
+      console.log('[CREATE-POST-MEDIA] Image picker result canceled:', result.canceled);
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        console.log('[CREATE-POST-MEDIA] Assets selected:', result.assets.length);
+
+        const newImages = result.assets.map((asset, idx) => {
+          const mimeType = asset.mimeType || getMimeTypeFromUri(asset.uri);
+          const ext = mimeType.split('/')[1] || 'jpg';
+          const fileName = asset.fileName || `post-image-${Date.now()}-${idx}.${ext}`;
+
+          console.log(`[CREATE-POST-MEDIA] Asset URI: ${asset.uri}`);
+          console.log(`[CREATE-POST-MEDIA] MIME type: ${mimeType}`);
+          console.log(`[CREATE-POST-MEDIA] File name: ${fileName}`);
+
+          return {
+            uri: asset.uri,
+            mimeType,
+            fileName,
+          };
+        });
+
+        setImages((prev) => [...prev, ...newImages].slice(0, 4));
+      }
+    } catch (err: any) {
+      console.error('[CREATE-POST-MEDIA] Error opening image library:', err);
+      Alert.alert('Error', 'An unexpected error occurred while opening the photo library.');
     }
   };
 
   const removeImage = (index: number) => {
+    console.log('[CREATE-POST-MEDIA] Removing selected image at index:', index);
     setImages((prev) => prev.filter((_, i) => i !== index));
   };
 
@@ -109,6 +152,7 @@ export const CreatePostScreen = () => {
 
     try {
       setIsSubmitting(true);
+      console.log('[CREATE-POST-MEDIA] Preparing upload');
       const formData = new FormData();
 
       if (trimmed) {
@@ -121,23 +165,34 @@ export const CreatePostScreen = () => {
         formData.append('quotedPost', quotedPost._id);
       }
 
-      images.forEach((uri, idx) => {
-        const ext = uri.split('.').pop() || 'jpg';
-        // @ts-ignore
+      images.forEach((img, idx) => {
+        const ext = img.fileName.split('.').pop() || 'jpg';
+        // @ts-ignore React Native FormData file shape
         formData.append('media', {
-          uri,
-          type: `image/${ext}`,
-          name: `upload-${Date.now()}-${idx}.${ext}`,
+          uri: img.uri,
+          type: img.mimeType || `image/${ext}`,
+          name: img.fileName,
         });
       });
 
-      await apiClient.post('/posts/create', formData, {
+      console.log('[CREATE-POST-MEDIA] Sending create post request to POST /posts/create');
+      const { data } = await apiClient.post('/posts/create', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
+      console.log('[CREATE-POST-MEDIA] API response:', data);
+      console.log('[CREATE-POST-MEDIA] Post created successfully');
+
+      // Invalidate feed and user profile caches silently without page or app reload
+      queryClient.invalidateQueries({ queryKey: ['posts'] });
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.feed });
+      if (user?._id) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.user.profile(user._id) });
+      }
+
       navigation.goBack();
     } catch (err: any) {
+      console.error('[CREATE-POST-MEDIA] Error:', err.response?.data?.message || err.message || err);
       Alert.alert(
         'Post creation failed',
         err.response?.data?.message || err.message || 'Error creating post'
@@ -147,12 +202,16 @@ export const CreatePostScreen = () => {
     }
   };
 
+  // Image-only posts allowed: valid if trimmed text OR at least 1 image
   const isPostValid = content.trim().length > 0 || images.length > 0;
+
+  const insets = useSafeAreaInsets();
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
     >
       <Header
         title={quotedPost ? 'Quote Post' : 'New Post'}
@@ -173,19 +232,33 @@ export const CreatePostScreen = () => {
       />
 
       <ScrollView style={styles.scrollArea} keyboardShouldPersistTaps="handled">
-        {/* Author + Visibility Pill */}
+        {/* Author + Visibility Pill + Quick Media Action */}
         <View style={styles.authorBar}>
           <Avatar uri={user?.avatar} name={user?.username} size={42} />
           <View style={styles.authorMeta}>
             <Text style={styles.authorName}>{user?.username}</Text>
-            <TouchableOpacity
-              onPress={() => setIsVisibilityModalOpen(true)}
-              style={styles.visibilityPill}
-            >
-              <Ionicons name={currentVisibilityOption.icon} size={13} color={darkTheme.accent} />
-              <Text style={styles.visibilityPillText}>{currentVisibilityOption.label}</Text>
-              <Ionicons name="chevron-down" size={12} color={darkTheme.accent} />
-            </TouchableOpacity>
+            {/* <View style={styles.authorActionsRow}>
+              <TouchableOpacity
+                onPress={() => setIsVisibilityModalOpen(true)}
+                style={styles.visibilityPill}
+              >
+                <Ionicons name={currentVisibilityOption.icon} size={13} color={darkTheme.accent} />
+                <Text style={styles.visibilityPillText}>{currentVisibilityOption.label}</Text>
+                <Ionicons name="chevron-down" size={12} color={darkTheme.accent} />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={pickImages}
+                disabled={images.length >= 4}
+                style={[styles.topImageBtn, images.length >= 4 && styles.mediaActionBtnDisabled]}
+                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              >
+                <Ionicons name="image" size={15} color={darkTheme.accent} />
+                <Text style={styles.topImageBtnText}>
+                  {images.length > 0 ? `${images.length}/4` : 'Photo'}
+                </Text>
+              </TouchableOpacity>
+            </View> */}
           </View>
         </View>
 
@@ -224,32 +297,68 @@ export const CreatePostScreen = () => {
 
         {/* Selected Images Preview */}
         {images.length > 0 && (
-          <View style={styles.mediaPreviewGrid}>
-            {images.map((uri, index) => (
-              <View key={index} style={styles.imageThumbContainer}>
-                <Image source={{ uri }} style={styles.imageThumb} contentFit="cover" />
-                <TouchableOpacity onPress={() => removeImage(index)} style={styles.removeBtn}>
-                  <Ionicons name="close" size={16} color="#ffffff" />
+          <View style={styles.mediaPreviewContainer}>
+            <View style={styles.mediaPreviewHeader}>
+              <Text style={styles.mediaCountText}>
+                {images.length} of 4 images selected
+              </Text>
+              {images.length < 4 && (
+                <TouchableOpacity
+                  onPress={pickImages}
+                  style={styles.addMoreBtn}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons name="add" size={16} color={darkTheme.accent} />
+                  <Text style={styles.addMoreText}>Add more</Text>
                 </TouchableOpacity>
-              </View>
-            ))}
+              )}
+            </View>
+
+            <View style={styles.mediaPreviewGrid}>
+              {images.map((item, index) => (
+                <View key={index} style={styles.imageThumbContainer}>
+                  <Image source={{ uri: item.uri }} style={styles.imageThumb} contentFit="cover" />
+                  <TouchableOpacity
+                    onPress={() => removeImage(index)}
+                    style={styles.removeBtn}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  >
+                    <Ionicons name="close" size={16} color="#ffffff" />
+                  </TouchableOpacity>
+                  <View style={styles.orderBadge}>
+                    <Text style={styles.orderBadgeText}>{index + 1}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
           </View>
         )}
       </ScrollView>
 
-      {/* Media & Toolbar */}
-      <View style={styles.toolbar}>
-        <TouchableOpacity onPress={pickImages} style={styles.toolBtn}>
-          <Ionicons name="image-outline" size={22} color={darkTheme.accent} />
-          <Text style={styles.toolBtnText}>Media ({images.length}/4)</Text>
-        </TouchableOpacity>
+      {/* Media & Toolbar (docked right above keyboard when open) */}
+      <View style={[styles.toolbar, { paddingBottom: Math.max(insets.bottom, 12) }]}>
+        <View style={styles.toolbarLeft}>
+          <TouchableOpacity
+            onPress={pickImages}
+            disabled={images.length >= 4}
+            style={[styles.mediaActionBtn, images.length >= 4 && styles.mediaActionBtnDisabled]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <View style={styles.imageIconWrapper}>
+              <Ionicons name="image" size={22} color={darkTheme.accent} />
+            </View>
+            <Text style={styles.mediaActionLabel}>
+              {images.length > 0 ? `Photo (${images.length}/4)` : 'Add Photos'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           onPress={() => setIsVisibilityModalOpen(true)}
-          style={styles.toolBtn}
+          style={styles.visBtn}
         >
-          <Ionicons name={currentVisibilityOption.icon} size={20} color={darkTheme.fgMuted} />
-          <Text style={styles.toolBtnTextSecondary}>{currentVisibilityOption.label}</Text>
+          <Ionicons name={currentVisibilityOption.icon} size={18} color={darkTheme.fgMuted} />
+          <Text style={styles.visBtnText}>{currentVisibilityOption.label}</Text>
         </TouchableOpacity>
       </View>
 
@@ -337,6 +446,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: 4,
   },
+  authorActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   visibilityPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -350,6 +464,23 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   visibilityPillText: {
+    color: darkTheme.accent,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  topImageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
+    borderRadius: 14,
+    paddingHorizontal: 9,
+    paddingVertical: 3,
+    gap: 5,
+    alignSelf: 'flex-start',
+  },
+  topImageBtnText: {
     color: darkTheme.accent,
     fontSize: 11,
     fontWeight: '700',
@@ -403,11 +534,35 @@ const styles = StyleSheet.create({
     color: darkTheme.fgMuted,
     fontSize: 13,
   },
+  mediaPreviewContainer: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  mediaPreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  mediaCountText: {
+    color: darkTheme.fgMuted,
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  addMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  addMoreText: {
+    color: darkTheme.accent,
+    fontSize: 12,
+    fontWeight: '600',
+  },
   mediaPreviewGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    marginTop: 16,
   },
   imageThumbContainer: {
     width: 100,
@@ -428,6 +583,20 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 3,
   },
+  orderBadge: {
+    position: 'absolute',
+    bottom: 6,
+    left: 6,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  orderBadgeText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
   toolbar: {
     borderTopWidth: 1,
     borderTopColor: darkTheme.border,
@@ -436,6 +605,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  toolbarLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  mediaActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+  },
+  mediaActionBtnDisabled: {
+    opacity: 0.4,
+  },
+  imageIconWrapper: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  mediaActionLabel: {
+    color: darkTheme.accent,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  visBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+  },
+  visBtnText: {
+    color: darkTheme.fgMuted,
+    fontSize: 13,
+    fontWeight: '600',
   },
   toolBtn: {
     flexDirection: 'row',

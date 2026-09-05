@@ -12,8 +12,10 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { Header } from '../../components/common/Header';
 import { PostCard } from '../../components/feed/PostCard';
-import { usePostMutations } from './useFeed';
+import { PostFeedSkeleton } from '../../components/common/Skeleton';
 import { useAuthStore } from '../../store/authStore';
+import { useTheme } from '../../theme/ThemeContext';
+import { usePostMutations } from './useFeed';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { darkTheme } from '../../theme/colors';
@@ -22,7 +24,7 @@ import { Post } from '../../types';
 export const BookmarksScreen = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
-  const { likePost, unlikePost, bookmarkPost, repostPost } = usePostMutations();
+  const { likePost, unlikePost, bookmarkPost, repostPost, pinPost, deletePost } = usePostMutations();
 
   const { data, isLoading, isRefetching, refetch } = useQuery({
     queryKey: queryKeys.posts.bookmarked,
@@ -33,11 +35,16 @@ export const BookmarksScreen = () => {
   });
 
   const posts = data || [];
+  console.log('get bookmarked post' , posts)
 
   const handleLikeToggle = (postId: string) => {
     const post = posts.find((p) => p._id === postId);
     if (!post) return;
-    const isLiked = user ? post.likes.includes(user._id) : false;
+    const isLiked = user
+      ? post.likes?.some(
+          (id: any) => id === user._id || id?._id === user._id || id === 'optimistic'
+        )
+      : false;
     if (isLiked) {
       unlikePost(postId);
     } else {
@@ -56,6 +63,8 @@ export const BookmarksScreen = () => {
       onComment={(id) => navigation.navigate('PostDetail', { postId: id })}
       onPressPost={(id) => navigation.navigate('PostDetail', { postId: id })}
       onPressAuthor={(authorId) => navigation.navigate('UserProfile', { userId: authorId })}
+      onPin={(id) => pinPost(id)}
+      onDelete={(id) => deletePost(id)}
     />
   );
 
@@ -64,9 +73,7 @@ export const BookmarksScreen = () => {
       <Header title="Bookmarks" onBack={() => navigation.goBack()} />
 
       {isLoading && posts.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
-        </View>
+        <PostFeedSkeleton count={3} />
       ) : posts.length === 0 ? (
         <View style={styles.centerContainer}>
           <Ionicons name="bookmark-outline" size={48} color={darkTheme.fgMuted} />

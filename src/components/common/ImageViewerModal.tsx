@@ -1,8 +1,21 @@
-import React from 'react';
-import { Modal, View, StyleSheet, TouchableOpacity, Dimensions, StatusBar, Text } from 'react-native';
+import React, { useState } from 'react';
+import {
+  Modal,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Dimensions,
+  StatusBar,
+  Text,
+  ActivityIndicator,
+  Alert,
+  Platform,
+} from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
-import { darkTheme } from '../../theme/colors';
+import * as FileSystem from 'expo-file-system/legacy';
+import * as MediaLibrary from 'expo-media-library/legacy';
+import * as Sharing from 'expo-sharing';
 
 interface ImageViewerModalProps {
   visible: boolean;
@@ -19,7 +32,8 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   initialIndex = 0,
   onClose,
 }) => {
-  const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [downloading, setDownloading] = useState(false);
 
   React.useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -27,22 +41,93 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
 
   if (!visible || images.length === 0) return null;
 
+  const currentImageUri = images[currentIndex];
+
+  const handleDownload = async () => {
+    if (!currentImageUri) return;
+
+    try {
+      setDownloading(true);
+
+      // Determine clean filename and extension
+      const urlWithoutQuery = currentImageUri.split('?')[0];
+      const ext = urlWithoutQuery.split('.').pop() || 'jpg';
+      const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext.toLowerCase()) ? ext : 'jpg';
+      const targetDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+      const localFileUri = `${targetDir}image_${Date.now()}.${safeExt}`;
+
+      console.log('[IMAGE-VIEWER] Downloading image to local cache:', localFileUri);
+      const downloadResult = await FileSystem.downloadAsync(currentImageUri, localFileUri);
+
+      if (downloadResult.status !== 200) {
+        throw new Error(`Failed to download image: HTTP ${downloadResult.status}`);
+      }
+
+      // Try saving to user's photo/media library
+      const permission = await MediaLibrary.requestPermissionsAsync(true);
+      if (permission.granted) {
+        await MediaLibrary.saveToLibraryAsync(downloadResult.uri);
+        Alert.alert('Saved', 'Photo saved to your library.');
+      } else {
+        // Fallback to native sharing sheet if permission is denied
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare) {
+          await Sharing.shareAsync(downloadResult.uri, {
+            dialogTitle: 'Save or share photo',
+          });
+        } else {
+          Alert.alert('Notice', 'Photo library permission was denied.');
+        }
+      }
+    } catch (err: any) {
+      console.error('[IMAGE-VIEWER] Download failed:', err);
+      // Try fallback to sharing if saveToLibrary failed
+      try {
+        const canShare = await Sharing.isAvailableAsync();
+        if (canShare && currentImageUri) {
+          const targetDir = FileSystem.cacheDirectory || FileSystem.documentDirectory;
+          const localFallback = `${targetDir}share_${Date.now()}.jpg`;
+          const res = await FileSystem.downloadAsync(currentImageUri, localFallback);
+          await Sharing.shareAsync(res.uri);
+          return;
+        }
+      } catch {}
+      Alert.alert('Download Error', err?.message || 'Failed to save image.');
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <View style={styles.backdrop}>
         <View style={styles.topBar}>
+          <TouchableOpacity onPress={onClose} style={styles.iconButton}>
+            <Ionicons name="close" size={24} color="#ffffff" />
+          </TouchableOpacity>
+
           <Text style={styles.counterText}>
             {currentIndex + 1} / {images.length}
           </Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Ionicons name="close" size={26} color="#ffffff" />
+
+          <TouchableOpacity
+            onPress={handleDownload}
+            style={styles.iconButton}
+            disabled={downloading}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            {downloading ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Ionicons name="download-outline" size={24} color="#ffffff" />
+            )}
           </TouchableOpacity>
         </View>
 
         <View style={styles.imageWrapper}>
           <Image
-            source={{ uri: images[currentIndex] }}
+            source={{ uri: currentImageUri }}
             style={styles.fullImage}
             contentFit="contain"
             transition={200}
@@ -82,9 +167,9 @@ const styles = StyleSheet.create({
   },
   topBar: {
     position: 'absolute',
-    top: 50,
-    left: 20,
-    right: 20,
+    top: Platform.OS === 'ios' ? 50 : 25,
+    left: 16,
+    right: 16,
     zIndex: 50,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -95,10 +180,13 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-  closeButton: {
+  iconButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
-    padding: 6,
+    width: 38,
+    height: 38,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   imageWrapper: {
     width,

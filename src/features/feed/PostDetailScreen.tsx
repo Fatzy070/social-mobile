@@ -15,13 +15,15 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { Header } from '../../components/common/Header';
-import { PostCard } from '../../components/feed/PostCard';
 import { Avatar } from '../../components/common/Avatar';
+import { PostCard } from '../../components/feed/PostCard';
+import { PostCardSkeleton, Skeleton, SkeletonAvatar } from '../../components/common/Skeleton';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { useAuthStore } from '../../store/authStore';
-import { usePostMutations } from './useFeed';
+import { useTheme } from '../../theme/ThemeContext';
 import { darkTheme } from '../../theme/colors';
+import { usePostMutations } from './useFeed';
 import { Post, Comment } from '../../types';
 
 export const PostDetailScreen = () => {
@@ -94,17 +96,28 @@ export const PostDetailScreen = () => {
     );
   };
 
-  const { likePost, unlikePost, bookmarkPost, repostPost } = usePostMutations();
+  const { likePost, unlikePost, bookmarkPost, repostPost, pinPost, unpinPost, deletePost } = usePostMutations();
 
   const handleLikeToggle = (targetPostId: string) => {
     if (!post) return;
-    const isLiked = user ? post.likes.includes(user._id) : false;
+    const isLiked = user
+      ? post.likes?.some(
+          (id: any) => id === user._id || id?._id === user._id || id === 'optimistic'
+        )
+      : false;
     if (isLiked) {
       unlikePost(targetPostId);
     } else {
       likePost(targetPostId);
     }
   };
+
+  const handleDeletePost = (id: string) => {
+    deletePost(id);
+    navigation.goBack();
+  };
+
+  const isPostPinned = !!user?.pinnedPost && (post?._id === (user.pinnedPost?._id || user.pinnedPost));
 
   return (
     <KeyboardAvoidingView
@@ -113,9 +126,25 @@ export const PostDetailScreen = () => {
     >
       <Header title="Post" onBack={() => navigation.goBack()} />
 
-      {postLoading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
+      {postLoading && !post ? (
+        <View style={{ flex: 1 }}>
+          <PostCardSkeleton />
+          <View style={{ padding: 16, gap: 16 }}>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <SkeletonAvatar size={36} />
+              <View style={{ flex: 1, gap: 6 }}>
+                <Skeleton width={120} height={13} />
+                <Skeleton width="80%" height={12} />
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <SkeletonAvatar size={36} />
+              <View style={{ flex: 1, gap: 6 }}>
+                <Skeleton width={100} height={13} />
+                <Skeleton width="60%" height={12} />
+              </View>
+            </View>
+          </View>
         </View>
       ) : !post ? (
         <View style={styles.centerContainer}>
@@ -130,11 +159,15 @@ export const PostDetailScreen = () => {
               <PostCard
                 post={post}
                 currentUserId={user?._id}
+                isPinned={isPostPinned}
                 onLike={handleLikeToggle}
                 onBookmark={(id) => bookmarkPost(id)}
                 onRepost={(id) => repostPost(id)}
                 onQuote={(quoted) => navigation.navigate('CreatePost', { quotedPost: quoted })}
                 onPressAuthor={(id) => navigation.navigate('UserProfile', { userId: id })}
+                onPin={(id) => pinPost(id)}
+                onUnpin={() => unpinPost()}
+                onDelete={handleDeletePost}
               />
               <View style={styles.commentsDivider}>
                 <Text style={styles.repliesHeading}>Replies ({comments.length})</Text>

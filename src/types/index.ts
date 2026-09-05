@@ -25,10 +25,10 @@ export interface User {
   _id: string;
   id?: string;
   username: string;
-  email: string;
+  email?: string;
   avatar?: string;
   coverImage?: string;
-  role: string;
+  role?: string;
   bio?: string;
   following?: string[];
   followers?: string[];
@@ -62,6 +62,7 @@ export interface Post {
   visibility?: 'public' | 'followers' | 'mentions' | 'private';
   mentions?: string[];
   likes: string[];
+  likesCount?: number;
   commentCount: number;
   bookMark: string[];
   reposts: string[];
@@ -96,7 +97,7 @@ export interface Conversation {
   groupName?: string;
   groupAvatar?: string;
   groupAvatarPublicId?: string;
-  groupAdmin?: string;
+  groupAdmin?: string | { _id: string; username?: string; avatar?: string };
   messagingMode?: 'ALL_MEMBERS' | 'ADMINS_ONLY';
   disappearingMessages?: {
     enabled: boolean;
@@ -203,4 +204,27 @@ export interface UserSession {
   lastActive: string;
   revokedAt: string | null;
   isCurrent?: boolean;
+}
+
+export interface ScheduledMessage {
+  _id: string;
+  sender: string;
+  conversationId: {
+    _id: string;
+    isGroup?: boolean;
+    groupName?: string;
+    groupAvatar?: string;
+    members?: Array<{
+      _id: string;
+      username: string;
+      avatar?: string;
+    }>;
+  };
+  text: string;
+  media?: MessageMedia[];
+  scheduledFor: string;
+  status: 'pending' | 'sent' | 'cancelled';
+  sentAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

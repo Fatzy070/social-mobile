@@ -14,6 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
 import { PostCard } from '../../components/feed/PostCard';
+import { ProfileHeaderSkeleton, PostFeedSkeleton } from '../../components/common/Skeleton';
 import { useAuthStore } from '../../store/authStore';
 import { usePostMutations } from '../feed/useFeed';
 import { apiClient } from '../../api/client';
@@ -91,12 +92,32 @@ export const ProfileScreen = () => {
 
         {/* Counts */}
         <View style={styles.statsRow}>
-          <TouchableOpacity style={styles.statItem}>
+          <TouchableOpacity
+            style={styles.statItem}
+            activeOpacity={0.7}
+            onPress={() =>
+              navigation.navigate('FollowList', {
+                userId: user?._id,
+                initialTab: 'following',
+                username: user?.username,
+              })
+            }
+          >
             <Text style={styles.statNumber}>{user?.following?.length || 0}</Text>
             <Text style={styles.statLabel}>Following</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.statItem}>
+          <TouchableOpacity
+            style={styles.statItem}
+            activeOpacity={0.7}
+            onPress={() =>
+              navigation.navigate('FollowList', {
+                userId: user?._id,
+                initialTab: 'followers',
+                username: user?.username,
+              })
+            }
+          >
             <Text style={styles.statNumber}>{user?.followers?.length || 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </TouchableOpacity>
@@ -125,18 +146,24 @@ export const ProfileScreen = () => {
     </View>
   );
 
-  const { likePost, unlikePost, bookmarkPost, repostPost } = usePostMutations();
+  const { likePost, unlikePost, bookmarkPost, repostPost, pinPost, unpinPost, deletePost } = usePostMutations();
 
   const handleLikeToggle = (postId: string) => {
     const post = posts.find((p) => p._id === postId);
     if (!post) return;
-    const isLiked = authUser ? post.likes.includes(authUser._id) : false;
+    const isLiked = authUser
+      ? post.likes?.some(
+          (id: any) => id === authUser._id || id?._id === authUser._id || id === 'optimistic'
+        )
+      : false;
     if (isLiked) {
       unlikePost(postId);
     } else {
       likePost(postId);
     }
   };
+
+  const pinnedPostId = user?.pinnedPost?._id || user?.pinnedPost;
 
   return (
     <View style={styles.container}>
@@ -153,30 +180,38 @@ export const ProfileScreen = () => {
       />
 
       {profileLoading && !user ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
+        <View style={{ flex: 1 }}>
+          <ProfileHeaderSkeleton />
+          <PostFeedSkeleton count={3} />
         </View>
       ) : (
         <FlatList
           data={posts}
           keyExtractor={(item) => item._id}
           ListHeaderComponent={renderHeader}
-          renderItem={({ item }) => (
-            <PostCard
-              post={item}
-              currentUserId={authUser?._id}
-              onLike={handleLikeToggle}
-              onBookmark={(id) => bookmarkPost(id)}
-              onRepost={(id) => repostPost(id)}
-              onQuote={(quoted) => navigation.navigate('CreatePost', { quotedPost: quoted })}
-              onComment={(id) => navigation.navigate('PostDetail', { postId: id })}
-              onPressPost={(id) => navigation.navigate('PostDetail', { postId: id })}
-              onPressAuthor={(authorId) => navigation.navigate('UserProfile', { userId: authorId })}
-            />
-          )}
+          renderItem={({ item }) => {
+            const isItemPinned = !!pinnedPostId && (item._id === pinnedPostId || item._id === pinnedPostId.toString());
+            return (
+              <PostCard
+                post={item}
+                currentUserId={authUser?._id}
+                isPinned={isItemPinned}
+                onLike={handleLikeToggle}
+                onBookmark={(id) => bookmarkPost(id)}
+                onRepost={(id) => repostPost(id)}
+                onQuote={(quoted) => navigation.navigate('CreatePost', { quotedPost: quoted })}
+                onComment={(id) => navigation.navigate('PostDetail', { postId: id })}
+                onPressPost={(id) => navigation.navigate('PostDetail', { postId: id })}
+                onPressAuthor={(authorId) => navigation.navigate('UserProfile', { userId: authorId })}
+                onPin={(id) => pinPost(id)}
+                onUnpin={() => unpinPost()}
+                onDelete={(id) => deletePost(id)}
+              />
+            );
+          }}
           ListEmptyComponent={
-            postsLoading ? (
-              <ActivityIndicator size="small" color={darkTheme.accent} style={{ marginVertical: 32 }} />
+            postsLoading && posts.length === 0 ? (
+              <PostFeedSkeleton count={2} />
             ) : (
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>No {activeTab} yet</Text>
