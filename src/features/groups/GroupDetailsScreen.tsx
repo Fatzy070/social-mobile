@@ -10,7 +10,6 @@ import {
   Switch,
   Modal,
   TextInput,
-  Dimensions,
   Linking,
 } from 'react-native';
 import { Image } from 'expo-image';
@@ -25,16 +24,18 @@ import { ImageViewerModal } from '../../components/common/ImageViewerModal';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { useAuthStore } from '../../store/authStore';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Conversation, User, Message } from '../../types';
 
-const { width } = Dimensions.get('window');
 
 type TabType = 'media' | 'files' | 'links' | 'voice' | 'pinned' | 'members';
 
 const DISAPPEARING_OPTIONS: Array<'off' | '24h' | '7d' | '30d'> = ['off', '24h', '7d', '30d'];
 
 export const GroupDetailsScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
@@ -308,7 +309,7 @@ export const GroupDetailsScreen = () => {
         onPress={() => setIsDisappearingModalOpen(true)}
       >
         <View style={styles.actionRowIcon}>
-          <Ionicons name="time-outline" size={20} color={darkTheme.accent} />
+          <Ionicons name="time-outline" size={20} color={colors.accentText} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={styles.actionRowTitle}>Disappearing Messages</Text>
@@ -316,7 +317,7 @@ export const GroupDetailsScreen = () => {
             {disappearingDuration === 'off' ? 'Off' : `Disappear after ${disappearingDuration}`}
           </Text>
         </View>
-        <Ionicons name="chevron-forward" size={18} color={darkTheme.fgMuted} />
+        <Ionicons name="chevron-forward" size={18} color={colors.fgMuted} />
       </TouchableOpacity>
 
       {/* Admin Mode Toggle (For Groups) */}
@@ -331,7 +332,7 @@ export const GroupDetailsScreen = () => {
             onValueChange={(val) =>
               updateModeMutation.mutate(val ? 'ADMINS_ONLY' : 'ALL_MEMBERS')
             }
-            trackColor={{ false: darkTheme.surface, true: darkTheme.accent }}
+            trackColor={{ false: colors.surface, true: colors.accent }}
             thumbColor="#ffffff"
           />
         </View>
@@ -362,11 +363,11 @@ export const GroupDetailsScreen = () => {
             <Ionicons
               name={isBlocked ? 'checkmark-circle-outline' : 'ban-outline'}
               size={20}
-              color={isBlocked ? darkTheme.success : darkTheme.error}
+              color={isBlocked ? colors.success : colors.error}
             />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.actionRowTitle, { color: isBlocked ? darkTheme.success : darkTheme.error }]}>
+            <Text style={[styles.actionRowTitle, { color: isBlocked ? colors.success : colors.error }]}>
               {isBlocked ? 'Unblock User' : 'Block User'}
             </Text>
             <Text style={styles.actionRowSubtitle}>
@@ -394,7 +395,7 @@ export const GroupDetailsScreen = () => {
             <Ionicons
               name={tab.icon as any}
               size={18}
-              color={activeTab === tab.key ? darkTheme.accent : darkTheme.fgMuted}
+              color={activeTab === tab.key ? colors.accent : colors.fgMuted}
             />
             <Text
               style={[
@@ -416,7 +417,7 @@ export const GroupDetailsScreen = () => {
 
       {isLoading && !conversation ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={darkTheme.accent} />
+          <ActivityIndicator size="large" color={colors.accentText} />
         </View>
       ) : (
         <FlatList
@@ -438,7 +439,7 @@ export const GroupDetailsScreen = () => {
                         style={styles.addMemberBtn}
                         onPress={() => setIsAddModalOpen(true)}
                       >
-                        <Ionicons name="person-add-outline" size={16} color={darkTheme.accent} />
+                        <Ionicons name="person-add-outline" size={16} color={colors.accentText} />
                         <Text style={styles.addMemberBtnText}>Add</Text>
                       </TouchableOpacity>
                     )}
@@ -459,7 +460,7 @@ export const GroupDetailsScreen = () => {
                           onPress={() => handleRemoveMember(m)}
                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                          <Ionicons name="remove-circle-outline" size={22} color={darkTheme.error} />
+                          <Ionicons name="remove-circle-outline" size={22} color={colors.error} />
                         </TouchableOpacity>
                       )}
                     </View>
@@ -471,10 +472,10 @@ export const GroupDetailsScreen = () => {
               {activeTab === 'media' && (
                 <View style={styles.tabContent}>
                   {mediaLoading ? (
-                    <ActivityIndicator size="small" color={darkTheme.accent} style={{ padding: 24 }} />
+                    <ActivityIndicator size="small" color={colors.accentText} style={{ padding: 24 }} />
                   ) : !mediaData?.media || mediaData.media.length === 0 ? (
                     <View style={styles.emptyContainer}>
-                      <Ionicons name="image-outline" size={40} color={darkTheme.fgMuted} />
+                      <Ionicons name="image-outline" size={40} color={colors.fgMuted} />
                       <Text style={styles.emptyText}>No shared media</Text>
                     </View>
                   ) : (
@@ -502,10 +503,10 @@ export const GroupDetailsScreen = () => {
               {activeTab === 'files' && (
                 <View style={styles.tabContent}>
                   {mediaLoading ? (
-                    <ActivityIndicator size="small" color={darkTheme.accent} style={{ padding: 24 }} />
+                    <ActivityIndicator size="small" color={colors.accentText} style={{ padding: 24 }} />
                   ) : !mediaData?.files || mediaData.files.length === 0 ? (
                     <View style={styles.emptyContainer}>
-                      <Ionicons name="document-text-outline" size={40} color={darkTheme.fgMuted} />
+                      <Ionicons name="document-text-outline" size={40} color={colors.fgMuted} />
                       <Text style={styles.emptyText}>No shared documents or files</Text>
                     </View>
                   ) : (
@@ -516,7 +517,7 @@ export const GroupDetailsScreen = () => {
                         onPress={() => Linking.openURL(file.url)}
                       >
                         <View style={styles.fileIcon}>
-                          <Ionicons name="document-outline" size={20} color={darkTheme.accent} />
+                          <Ionicons name="document-outline" size={20} color={colors.accentText} />
                         </View>
                         <View style={{ flex: 1 }}>
                           <Text style={styles.fileName} numberOfLines={1}>
@@ -528,7 +529,7 @@ export const GroupDetailsScreen = () => {
                             </Text>
                           ) : null}
                         </View>
-                        <Ionicons name="download-outline" size={18} color={darkTheme.fgMuted} />
+                        <Ionicons name="download-outline" size={18} color={colors.fgMuted} />
                       </TouchableOpacity>
                     ))
                   )}
@@ -539,10 +540,10 @@ export const GroupDetailsScreen = () => {
               {activeTab === 'links' && (
                 <View style={styles.tabContent}>
                   {mediaLoading ? (
-                    <ActivityIndicator size="small" color={darkTheme.accent} style={{ padding: 24 }} />
+                    <ActivityIndicator size="small" color={colors.accentText} style={{ padding: 24 }} />
                   ) : !mediaData?.links || mediaData.links.length === 0 ? (
                     <View style={styles.emptyContainer}>
-                      <Ionicons name="link-outline" size={40} color={darkTheme.fgMuted} />
+                      <Ionicons name="link-outline" size={40} color={colors.fgMuted} />
                       <Text style={styles.emptyText}>No links shared</Text>
                     </View>
                   ) : (
@@ -552,11 +553,11 @@ export const GroupDetailsScreen = () => {
                         style={styles.linkRow}
                         onPress={() => Linking.openURL(link.url)}
                       >
-                        <Ionicons name="globe-outline" size={18} color={darkTheme.accent} />
+                        <Ionicons name="globe-outline" size={18} color={colors.accentText} />
                         <Text style={styles.linkUrl} numberOfLines={1}>
                           {link.url}
                         </Text>
-                        <Ionicons name="open-outline" size={16} color={darkTheme.fgMuted} />
+                        <Ionicons name="open-outline" size={16} color={colors.fgMuted} />
                       </TouchableOpacity>
                     ))
                   )}
@@ -567,10 +568,10 @@ export const GroupDetailsScreen = () => {
               {activeTab === 'voice' && (
                 <View style={styles.tabContent}>
                   {mediaLoading ? (
-                    <ActivityIndicator size="small" color={darkTheme.accent} style={{ padding: 24 }} />
+                    <ActivityIndicator size="small" color={colors.accentText} style={{ padding: 24 }} />
                   ) : !mediaData?.voice || mediaData.voice.length === 0 ? (
                     <View style={styles.emptyContainer}>
-                      <Ionicons name="mic-outline" size={40} color={darkTheme.fgMuted} />
+                      <Ionicons name="mic-outline" size={40} color={colors.fgMuted} />
                       <Text style={styles.emptyText}>No voice notes shared</Text>
                     </View>
                   ) : (
@@ -588,7 +589,7 @@ export const GroupDetailsScreen = () => {
                 <View style={styles.tabContent}>
                   {pinnedMessages.length === 0 ? (
                     <View style={styles.emptyContainer}>
-                      <Ionicons name="pin-outline" size={40} color={darkTheme.fgMuted} />
+                      <Ionicons name="pin-outline" size={40} color={colors.fgMuted} />
                       <Text style={styles.emptyText}>No pinned messages</Text>
                     </View>
                   ) : (
@@ -640,7 +641,7 @@ export const GroupDetailsScreen = () => {
                   {dur === 'off' ? 'Off' : dur}
                 </Text>
                 {disappearingDuration === dur && (
-                  <Ionicons name="checkmark" size={20} color={darkTheme.accent} />
+                  <Ionicons name="checkmark" size={20} color={colors.accentText} />
                 )}
               </TouchableOpacity>
             ))}
@@ -668,14 +669,14 @@ export const GroupDetailsScreen = () => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add Members</Text>
               <TouchableOpacity onPress={() => setIsAddModalOpen(false)}>
-                <Ionicons name="close" size={22} color={darkTheme.fg} />
+                <Ionicons name="close" size={22} color={colors.fg} />
               </TouchableOpacity>
             </View>
 
             <TextInput
               style={styles.searchInput}
               placeholder="Search followers / following..."
-              placeholderTextColor={darkTheme.fgMuted}
+              placeholderTextColor={colors.fgMuted}
               value={memberSearchTerm}
               onChangeText={setMemberSearchTerm}
             />
@@ -729,10 +730,10 @@ export const GroupDetailsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -743,7 +744,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   avatarWrapper: {
     position: 'relative',
@@ -752,78 +753,78 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 0,
     right: 0,
-    backgroundColor: darkTheme.accent,
-    borderRadius: 14,
+    backgroundColor: colors.accent,
+    borderRadius: metrics.radius,
     width: 28,
     height: 28,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: darkTheme.bg,
+    borderColor: colors.bg,
   },
   groupName: {
-    color: darkTheme.fg,
-    fontSize: 20,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '800',
     marginTop: 12,
   },
   memberCount: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     marginTop: 4,
   },
   actionRowBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.surface,
-    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
-    borderRadius: 14,
+    borderRadius: metrics.radius,
     marginHorizontal: 16,
     marginTop: 16,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     gap: 12,
-    width: width - 32,
+    alignSelf: 'stretch',
   },
   actionRowIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    backgroundColor: colors.accentMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
   actionRowTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '700',
   },
   actionRowSubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
   adminControlBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.surface,
-    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
-    borderRadius: 14,
+    borderRadius: metrics.radius,
     marginHorizontal: 16,
     marginTop: 12,
     borderWidth: 1,
-    borderColor: darkTheme.border,
-    width: width - 32,
+    borderColor: colors.border,
+    alignSelf: 'stretch',
   },
   adminControlTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '700',
   },
   adminControlSub: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -843,31 +844,31 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   tabItemActive: {
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    backgroundColor: colors.accentMuted,
   },
   tabText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 11,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontWeight: '700',
   },
   tabContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 14,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 18,
     paddingBottom: 8,
   },
   sectionHeading: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 0.5,
@@ -878,29 +879,29 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   addMemberBtnText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 13,
     fontWeight: '700',
   },
   memberRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   memberTextContainer: {
     flex: 1,
   },
   memberUsername: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
   adminBadge: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 11,
     fontWeight: '700',
     marginTop: 2,
@@ -911,11 +912,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   mediaGridItem: {
-    width: (width - 32 - 12) / 3,
-    height: (width - 32 - 12) / 3,
+    width: '31%',
+    aspectRatio: 1,
     borderRadius: 10,
     overflow: 'hidden',
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
   },
   mediaThumb: {
     width: '100%',
@@ -926,24 +927,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   fileIcon: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     justifyContent: 'center',
     alignItems: 'center',
   },
   fileName: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '600',
   },
   fileSize: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -952,12 +953,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     gap: 10,
   },
   linkUrl: {
     flex: 1,
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 14,
     textDecorationLine: 'underline',
   },
@@ -969,15 +970,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   pinnedSender: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 13,
     fontWeight: '700',
   },
   pinnedBody: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     marginTop: 2,
   },
@@ -987,7 +988,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   emptyText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
   },
   modalOverlay: {
@@ -996,7 +997,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -1009,12 +1010,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
   },
   modalSub: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     marginTop: 4,
     marginBottom: 16,
@@ -1026,21 +1027,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   disappearingLabel: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
   searchInput: {
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     marginBottom: 12,
   },
@@ -1049,12 +1050,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   candidateName: {
     flex: 1,
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -1063,23 +1064,23 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: darkTheme.borderStrong,
+    borderColor: colors.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: darkTheme.accent,
-    borderColor: darkTheme.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   emptyCandidateText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: 20,
   },
   confirmAddBtn: {
-    backgroundColor: darkTheme.accent,
-    borderRadius: 14,
+    backgroundColor: colors.accent,
+    borderRadius: metrics.radius,
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 16,

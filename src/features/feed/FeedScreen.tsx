@@ -1,3 +1,4 @@
+import { ScreenIntro } from '../../components/common/ScreenIntro';
 import React, { useState } from 'react';
 import {
   View,
@@ -14,15 +15,17 @@ import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
 import { PostCard } from '../../components/feed/PostCard';
 import { SidebarDrawer } from '../../components/navigation/SidebarDrawer';
-import { FloatingCreateButton } from '../../components/common/FloatingCreateButton';
 import { PostFeedSkeleton } from '../../components/common/Skeleton';
 import { useFeed, usePostMutations } from './useFeed';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../theme/ThemeContext';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Post } from '../../types';
 
 export const FeedScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
   const [activeTab, setActiveTab] = useState<'discover' | 'following'>('discover');
@@ -96,6 +99,53 @@ export const FeedScreen = () => {
     );
   };
 
+  const feedOpening = <>
+    <ScreenIntro label="The everyday, together" title="Your world, in words." />
+    <TouchableOpacity style={styles.composeInvitation} onPress={() => navigation.navigate('CreatePost')} accessibilityRole="button" accessibilityLabel="Write a post">
+      <Avatar uri={user?.avatar} name={user?.username} size={34} />
+      <Text style={styles.composePrompt}>Share a thought…</Text><Ionicons name="create-outline" size={21} color={colors.accentText} />
+    </TouchableOpacity>
+      {/* Discover | Following Segmented Tabs */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity
+          style={styles.tabButton}
+          activeOpacity={0.7}
+          onPress={() => setActiveTab('discover')}
+        >
+          <View style={styles.tabContent}>
+            <Ionicons
+              name={isDiscover ? 'compass' : 'compass-outline'}
+              size={18}
+              color={isDiscover ? colors.fg : colors.fgMuted}
+            />
+            <Text style={[styles.tabText, isDiscover && styles.tabTextActive]}>
+              Discover
+            </Text>
+          </View>
+          {isDiscover && <View style={styles.activeIndicator} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.tabButton}
+          activeOpacity={0.7}
+          onPress={() => setActiveTab('following')}
+        >
+          <View style={styles.tabContent}>
+            <Ionicons
+              name={!isDiscover ? 'people' : 'people-outline'}
+              size={18}
+              color={!isDiscover ? colors.fg : colors.fgMuted}
+            />
+            <Text style={[styles.tabText, !isDiscover && styles.tabTextActive]}>
+              Following
+            </Text>
+          </View>
+          {!isDiscover && <View style={styles.activeIndicator} />}
+        </TouchableOpacity>
+      </View>
+
+  </>;
+
   return (
     <View style={styles.container}>
       {/* Top Header: Left = Brand Logo trigger, Center = Nexus branding, Right = User Avatar */}
@@ -116,54 +166,15 @@ export const FeedScreen = () => {
         }
       />
 
-      {/* Discover | Following Segmented Tabs */}
-      <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={styles.tabButton}
-          activeOpacity={0.7}
-          onPress={() => setActiveTab('discover')}
-        >
-          <View style={styles.tabContent}>
-            <Ionicons
-              name={isDiscover ? 'compass' : 'compass-outline'}
-              size={18}
-              color={isDiscover ? darkTheme.fg : darkTheme.fgMuted}
-            />
-            <Text style={[styles.tabText, isDiscover && styles.tabTextActive]}>
-              Discover
-            </Text>
-          </View>
-          {isDiscover && <View style={styles.activeIndicator} />}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.tabButton}
-          activeOpacity={0.7}
-          onPress={() => setActiveTab('following')}
-        >
-          <View style={styles.tabContent}>
-            <Ionicons
-              name={!isDiscover ? 'people' : 'people-outline'}
-              size={18}
-              color={!isDiscover ? darkTheme.fg : darkTheme.fgMuted}
-            />
-            <Text style={[styles.tabText, !isDiscover && styles.tabTextActive]}>
-              Following
-            </Text>
-          </View>
-          {!isDiscover && <View style={styles.activeIndicator} />}
-        </TouchableOpacity>
-      </View>
-
       {/* Main Feed Content */}
       {currentLoading && posts.length === 0 ? (
-        <PostFeedSkeleton count={4} />
+        <View style={{ flex: 1 }}>{feedOpening}<PostFeedSkeleton count={4} /></View>
       ) : posts.length === 0 ? (
-        <View style={styles.centerContainer}>
+        <View style={{ flex: 1 }}>{feedOpening}<View style={styles.centerContainer}>
           <Ionicons
             name={isDiscover ? 'newspaper-outline' : 'people-outline'}
             size={52}
-            color={darkTheme.fgMuted}
+            color={colors.fgMuted}
           />
           <Text style={styles.emptyTitle}>
             {isDiscover ? 'No Posts Yet' : 'No Following Posts'}
@@ -184,9 +195,10 @@ export const FeedScreen = () => {
               <Text style={styles.emptyActionBtnText}>Explore Discover Feed</Text>
             </TouchableOpacity>
           )}
-        </View>
+        </View></View>
       ) : (
         <FlatList
+          ListHeaderComponent={feedOpening}
           data={posts}
           keyExtractor={(item) => item._id}
           renderItem={renderPost}
@@ -194,8 +206,8 @@ export const FeedScreen = () => {
             <RefreshControl
               refreshing={currentRefetching}
               onRefresh={currentRefetch}
-              tintColor={darkTheme.accent}
-              colors={[darkTheme.accent]}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
             />
           }
           contentContainerStyle={styles.listContent}
@@ -203,8 +215,6 @@ export const FeedScreen = () => {
         />
       )}
 
-      {/* Floating Action Button (FAB) for Create Post */}
-      <FloatingCreateButton onPress={() => navigation.navigate('CreatePost')} />
 
       {/* Modern Sidebar Navigation Drawer */}
       <SidebarDrawer
@@ -215,23 +225,26 @@ export const FeedScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
+  composeInvitation: { marginHorizontal: 20, marginBottom: 22, padding: 16, borderWidth: 1, borderColor: colors.border, borderRadius: 10, backgroundColor: colors.surface, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  composePrompt: { flex: 1, fontSize: 15, color: colors.fgMuted },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: darkTheme.bg,
-    borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
-    paddingHorizontal: 8,
+    backgroundColor: colors.bg,
+    borderBottomWidth: 0,
+    borderBottomColor: colors.border,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 14,
     position: 'relative',
   },
   tabContent: {
@@ -240,21 +253,21 @@ const styles = StyleSheet.create({
     gap: 7,
   },
   tabText: {
-    color: darkTheme.fgMuted,
-    fontSize: 15,
+    color: colors.fgMuted,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontWeight: '700',
   },
   activeIndicator: {
     position: 'absolute',
     bottom: 0,
-    width: 48,
+    width: 24,
     height: 3,
     borderRadius: 1.5,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
   },
   centerContainer: {
     flex: 1,
@@ -263,13 +276,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
     marginTop: 14,
   },
   emptySubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
@@ -280,12 +293,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: darkTheme.accentMuted,
+    backgroundColor: colors.accentMuted,
     borderWidth: 1,
-    borderColor: darkTheme.accent,
+    borderColor: colors.accent,
   },
   emptyActionBtnText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 14,
     fontWeight: '600',
   },

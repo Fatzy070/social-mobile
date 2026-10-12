@@ -23,7 +23,9 @@ import { Avatar } from '../../components/common/Avatar';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Post } from '../../types';
 
 type VisibilityType = 'public' | 'followers' | 'private';
@@ -57,6 +59,7 @@ const VISIBILITY_OPTIONS: VisibilityOption[] = [
 ];
 
 export const CreatePostScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const { user } = useAuthStore();
@@ -214,21 +217,9 @@ export const CreatePostScreen = () => {
       keyboardVerticalOffset={Platform.OS === 'ios' ? insets.top : 0}
     >
       <Header
-        title={quotedPost ? 'Quote Post' : 'New Post'}
+        title={quotedPost ? 'Add your perspective' : 'Share something'}
         onBack={() => navigation.goBack()}
-        rightAction={
-          <TouchableOpacity
-            disabled={!isPostValid || isSubmitting}
-            onPress={handleSubmit}
-            style={[styles.postButton, (!isPostValid || isSubmitting) && styles.postButtonDisabled]}
-          >
-            {isSubmitting ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <Text style={styles.postButtonText}>Post</Text>
-            )}
-          </TouchableOpacity>
-        }
+
       />
 
       <ScrollView style={styles.scrollArea} keyboardShouldPersistTaps="handled">
@@ -237,36 +228,25 @@ export const CreatePostScreen = () => {
           <Avatar uri={user?.avatar} name={user?.username} size={42} />
           <View style={styles.authorMeta}>
             <Text style={styles.authorName}>{user?.username}</Text>
-            {/* <View style={styles.authorActionsRow}>
-              <TouchableOpacity
-                onPress={() => setIsVisibilityModalOpen(true)}
-                style={styles.visibilityPill}
-              >
-                <Ionicons name={currentVisibilityOption.icon} size={13} color={darkTheme.accent} />
-                <Text style={styles.visibilityPillText}>{currentVisibilityOption.label}</Text>
-                <Ionicons name="chevron-down" size={12} color={darkTheme.accent} />
-              </TouchableOpacity>
 
-              <TouchableOpacity
-                onPress={pickImages}
-                disabled={images.length >= 4}
-                style={[styles.topImageBtn, images.length >= 4 && styles.mediaActionBtnDisabled]}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Ionicons name="image" size={15} color={darkTheme.accent} />
-                <Text style={styles.topImageBtnText}>
-                  {images.length > 0 ? `${images.length}/4` : 'Photo'}
-                </Text>
-              </TouchableOpacity>
-            </View> */}
           </View>
         </View>
 
+        <View style={{ alignItems: 'flex-start', marginBottom: 20 }}>
+          <TouchableOpacity
+          onPress={() => setIsVisibilityModalOpen(true)}
+          style={styles.visBtn}
+        >
+          <Ionicons name={currentVisibilityOption.icon} size={18} color={colors.fgMuted} />
+          <Text style={styles.visBtnText}>{currentVisibilityOption.label}</Text>
+          </TouchableOpacity>
+        </View>
         {/* Text Input */}
         <TextInput
           style={styles.textInput}
-          placeholder="What's happening?"
-          placeholderTextColor={darkTheme.fgMuted}
+          accessibilityLabel="Post text"
+          placeholder="A thought worth sharing…"
+          placeholderTextColor={colors.fgMuted}
           multiline
           value={content}
           onChangeText={setContent}
@@ -286,7 +266,7 @@ export const CreatePostScreen = () => {
                 <Text style={styles.quotedUsername}>{quotedPost.authorId?.username}</Text>
               </View>
               <TouchableOpacity onPress={() => setQuotedPost(undefined)}>
-                <Ionicons name="close" size={16} color={darkTheme.fgMuted} />
+                <Ionicons name="close" size={16} color={colors.fgMuted} />
               </TouchableOpacity>
             </View>
             <Text style={styles.quotedText} numberOfLines={2}>
@@ -308,7 +288,7 @@ export const CreatePostScreen = () => {
                   style={styles.addMoreBtn}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                  <Ionicons name="add" size={16} color={darkTheme.accent} />
+                  <Ionicons name="add" size={16} color={colors.accentText} />
                   <Text style={styles.addMoreText}>Add more</Text>
                 </TouchableOpacity>
               )}
@@ -345,7 +325,7 @@ export const CreatePostScreen = () => {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <View style={styles.imageIconWrapper}>
-              <Ionicons name="image" size={22} color={darkTheme.accent} />
+              <Ionicons name="image" size={22} color={colors.accentText} />
             </View>
             <Text style={styles.mediaActionLabel}>
               {images.length > 0 ? `Photo (${images.length}/4)` : 'Add Photos'}
@@ -353,13 +333,17 @@ export const CreatePostScreen = () => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          onPress={() => setIsVisibilityModalOpen(true)}
-          style={styles.visBtn}
-        >
-          <Ionicons name={currentVisibilityOption.icon} size={18} color={darkTheme.fgMuted} />
-          <Text style={styles.visBtnText}>{currentVisibilityOption.label}</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            disabled={!isPostValid || isSubmitting}
+            onPress={handleSubmit}
+            style={[styles.postButton, (!isPostValid || isSubmitting) && styles.postButtonDisabled]}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text style={styles.postButtonText}>Post</Text>
+            )}
+          </TouchableOpacity>
       </View>
 
       {/* Visibility Modal Picker */}
@@ -378,7 +362,7 @@ export const CreatePostScreen = () => {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Choose Audience</Text>
               <TouchableOpacity onPress={() => setIsVisibilityModalOpen(false)}>
-                <Ionicons name="close" size={22} color={darkTheme.fgMuted} />
+                <Ionicons name="close" size={22} color={colors.fgMuted} />
               </TouchableOpacity>
             </View>
 
@@ -397,19 +381,19 @@ export const CreatePostScreen = () => {
                     <Ionicons
                       name={opt.icon}
                       size={20}
-                      color={isSelected ? darkTheme.accent : darkTheme.fg}
+                      color={isSelected ? colors.accent : colors.fg}
                     />
                   </View>
                   <View style={styles.optionInfo}>
                     <Text
-                      style={[styles.optionLabel, isSelected && { color: darkTheme.accent }]}
+                      style={[styles.optionLabel, isSelected && { color: colors.accent }]}
                     >
                       {opt.label}
                     </Text>
                     <Text style={styles.optionDescription}>{opt.description}</Text>
                   </View>
                   {isSelected && (
-                    <Ionicons name="checkmark" size={20} color={darkTheme.accent} />
+                    <Ionicons name="checkmark" size={20} color={colors.accentText} />
                   )}
                 </TouchableOpacity>
               );
@@ -421,14 +405,14 @@ export const CreatePostScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   scrollArea: {
     flex: 1,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 14,
   },
   authorBar: {
@@ -441,8 +425,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   authorName: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '700',
     marginBottom: 4,
   },
@@ -454,46 +438,46 @@ const styles = StyleSheet.create({
   visibilityPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    backgroundColor: colors.accentMuted,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
-    borderRadius: 14,
+    borderColor: colors.accentMuted,
+    borderRadius: metrics.radius,
     paddingHorizontal: 8,
     paddingVertical: 3,
     gap: 4,
     alignSelf: 'flex-start',
   },
   visibilityPillText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 11,
     fontWeight: '700',
   },
   topImageBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    backgroundColor: colors.accentMuted,
     borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
-    borderRadius: 14,
+    borderColor: colors.accentMuted,
+    borderRadius: metrics.radius,
     paddingHorizontal: 9,
     paddingVertical: 3,
     gap: 5,
     alignSelf: 'flex-start',
   },
   topImageBtnText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 11,
     fontWeight: '700',
   },
   textInput: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 16,
     lineHeight: 24,
     minHeight: 120,
     textAlignVertical: 'top',
   },
   postButton: {
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     paddingHorizontal: 18,
     paddingVertical: 8,
     borderRadius: 20,
@@ -508,10 +492,10 @@ const styles = StyleSheet.create({
   },
   quotedPreview: {
     borderWidth: 1,
-    borderColor: darkTheme.borderStrong,
+    borderColor: colors.borderStrong,
     borderRadius: 12,
     padding: 12,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     marginTop: 12,
   },
   quotedHeader: {
@@ -526,12 +510,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   quotedUsername: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     fontWeight: '600',
   },
   quotedText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
   },
   mediaPreviewContainer: {
@@ -545,7 +529,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   mediaCountText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -555,7 +539,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   addMoreText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -599,8 +583,8 @@ const styles = StyleSheet.create({
   },
   toolbar: {
     borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
-    paddingHorizontal: 16,
+    borderTopColor: colors.border,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -618,7 +602,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 20,
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    backgroundColor: colors.accentMuted,
   },
   mediaActionBtnDisabled: {
     opacity: 0.4,
@@ -626,12 +610,12 @@ const styles = StyleSheet.create({
   imageIconWrapper: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: metrics.radius,
     justifyContent: 'center',
     alignItems: 'center',
   },
   mediaActionLabel: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 13,
     fontWeight: '700',
   },
@@ -643,22 +627,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   visBtnText: {
-    color: darkTheme.fgMuted,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  toolBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  toolBtnText: {
-    color: darkTheme.accent,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  toolBtnTextSecondary: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -668,7 +637,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
@@ -681,7 +650,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 17,
     fontWeight: '700',
   },
@@ -690,13 +659,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     paddingHorizontal: 12,
-    borderRadius: 14,
+    borderRadius: metrics.radius,
     marginBottom: 8,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   visibilityOptionSelected: {
     borderWidth: 1,
-    borderColor: darkTheme.accent,
+    borderColor: colors.accent,
   },
   optionIconBox: {
     marginRight: 14,
@@ -705,12 +674,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionLabel: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '700',
   },
   optionDescription: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },

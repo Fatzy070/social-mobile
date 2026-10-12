@@ -1,7 +1,9 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 
 interface AttachmentActionsModalProps {
   visible: boolean;
@@ -20,6 +22,8 @@ export const AttachmentActionsModal: React.FC<AttachmentActionsModalProps> = ({
   onOpenCamera,
   onOpenSchedule,
 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
   return (
     <Modal
       visible={visible}
@@ -32,13 +36,13 @@ export const AttachmentActionsModal: React.FC<AttachmentActionsModalProps> = ({
         onPress={onClose}
         style={styles.backdrop}
       >
-        <TouchableOpacity activeOpacity={1} style={styles.sheetContainer}>
+        <TouchableOpacity activeOpacity={1} style={[styles.sheetContainer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
           <View style={styles.handle} />
 
           <View style={styles.header}>
             <Text style={styles.title}>Message Actions</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Ionicons name="close" size={20} color={darkTheme.fgMuted} />
+              <Ionicons name="close" size={20} color={colors.fgMuted} />
             </TouchableOpacity>
           </View>
 
@@ -54,8 +58,8 @@ export const AttachmentActionsModal: React.FC<AttachmentActionsModalProps> = ({
                 }, 150);
               }}
             >
-              <View style={[styles.iconCircle, { backgroundColor: 'rgba(99, 102, 241, 0.15)' }]}>
-                <Ionicons name="images" size={24} color={darkTheme.accent} />
+              <View style={[styles.iconCircle, { backgroundColor: colors.accentMuted }]}>
+                <Ionicons name="images" size={24} color={colors.accentText} />
               </View>
               <Text style={styles.actionLabel}>Photos & Videos</Text>
             </TouchableOpacity>
@@ -72,7 +76,7 @@ export const AttachmentActionsModal: React.FC<AttachmentActionsModalProps> = ({
               }}
             >
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(16, 185, 129, 0.15)' }]}>
-                <Ionicons name="document-text" size={24} color={darkTheme.success} />
+                <Ionicons name="document-text" size={24} color={colors.success} />
               </View>
               <Text style={styles.actionLabel}>Document</Text>
             </TouchableOpacity>
@@ -106,7 +110,7 @@ export const AttachmentActionsModal: React.FC<AttachmentActionsModalProps> = ({
               }}
             >
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(245, 158, 11, 0.15)' }]}>
-                <Ionicons name="time" size={24} color={darkTheme.bookmark} />
+                <Ionicons name="time" size={24} color={colors.bookmark} />
               </View>
               <Text style={styles.actionLabel}>Schedule</Text>
             </TouchableOpacity>
@@ -117,18 +121,18 @@ export const AttachmentActionsModal: React.FC<AttachmentActionsModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     paddingHorizontal: 20,
     paddingBottom: 36,
     paddingTop: 12,
@@ -137,7 +141,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 4,
     borderRadius: 2,
-    backgroundColor: darkTheme.borderStrong,
+    backgroundColor: colors.borderStrong,
     alignSelf: 'center',
     marginBottom: 12,
   },
@@ -148,12 +152,12 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   closeBtn: {
     padding: 4,
@@ -166,10 +170,10 @@ const styles = StyleSheet.create({
   },
   actionCard: {
     width: '48%',
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     paddingVertical: 18,
     alignItems: 'center',
     gap: 10,
@@ -184,6 +188,6 @@ const styles = StyleSheet.create({
   actionLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: darkTheme.fg,
+    color: colors.fg,
   },
 });

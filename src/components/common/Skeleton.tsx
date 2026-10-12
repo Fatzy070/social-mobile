@@ -17,7 +17,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   style,
   circle = false,
 }) => {
-  const { isDark } = useTheme();
+  const { colors } = useTheme();
   const opacityAnim = useRef(new Animated.Value(0.3)).current;
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export const Skeleton: React.FC<SkeletonProps> = ({
     return () => shimmer.stop();
   }, [opacityAnim]);
 
-  const baseBg = isDark ? '#26262e' : '#e2e8f0';
+  const baseBg = colors.borderStrong;
   const computedRadius = circle && typeof height === 'number' ? height / 2 : borderRadius;
 
   return (

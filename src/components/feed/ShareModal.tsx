@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,7 +10,9 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Post } from '../../types';
 
 interface ShareModalProps {
@@ -29,6 +32,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   onRepostToggle,
   onQuotePress,
 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = async () => {
@@ -71,13 +76,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         onPress={onClose}
         style={styles.modalBackdrop}
       >
-        <TouchableOpacity activeOpacity={1} style={styles.sheetContainer}>
+        <TouchableOpacity activeOpacity={1} style={[styles.sheetContainer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
           <View style={styles.sheetHandle} />
 
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Share Post</Text>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close" size={20} color={darkTheme.fgMuted} />
+              <Ionicons name="close" size={20} color={colors.fgMuted} />
             </TouchableOpacity>
           </View>
 
@@ -95,14 +100,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <Ionicons
                 name="repeat-outline"
                 size={20}
-                color={isReposted ? darkTheme.success : darkTheme.fgMuted}
+                color={isReposted ? colors.success : colors.fgMuted}
               />
             </View>
             <View style={styles.itemTextContainer}>
               <Text
                 style={[
                   styles.itemTitle,
-                  isReposted && { color: darkTheme.success, fontWeight: '700' },
+                  isReposted && { color: colors.success, fontWeight: '700' },
                 ]}
               >
                 {isReposted ? 'Undo Repost' : 'Repost'}
@@ -118,7 +123,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           {/* Quote Post */}
           <TouchableOpacity style={styles.sheetItem} onPress={handleQuoteClick}>
             <View style={[styles.iconCircle, styles.iconCircleDefault]}>
-              <Ionicons name="create-outline" size={20} color={darkTheme.fgMuted} />
+              <Ionicons name="create-outline" size={20} color={colors.fgMuted} />
             </View>
             <View style={styles.itemTextContainer}>
               <Text style={styles.itemTitle}>Quote Post</Text>
@@ -134,7 +139,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               <Ionicons
                 name={copied ? 'checkmark' : 'share-social-outline'}
                 size={20}
-                color={copied ? darkTheme.success : darkTheme.fgMuted}
+                color={copied ? colors.success : colors.fgMuted}
               />
             </View>
             <View style={styles.itemTextContainer}>
@@ -150,21 +155,21 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 10,
     paddingBottom: 32,
     borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
+    borderTopColor: colors.border,
   },
   sheetHandle: {
     width: 36,
@@ -180,11 +185,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     marginBottom: 8,
   },
   sheetTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 16,
     fontWeight: '700',
   },
@@ -193,7 +198,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 8,
-    borderRadius: 14,
+    borderRadius: metrics.radius,
     gap: 12,
   },
   sheetItemActive: {
@@ -207,7 +212,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconCircleDefault: {
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   iconCircleActive: {
     backgroundColor: 'rgba(52, 199, 89, 0.2)',
@@ -216,12 +221,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '600',
   },
   itemSubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },

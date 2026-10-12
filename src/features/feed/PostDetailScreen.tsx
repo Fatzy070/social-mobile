@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import {
   View,
@@ -22,11 +23,15 @@ import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../theme/ThemeContext';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { usePostMutations } from './useFeed';
 import { Post, Comment } from '../../types';
 
 export const PostDetailScreen = () => {
+  const insets = useSafeAreaInsets();
+  const { colors, styles } = useThemedStyles(createStyles);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
@@ -124,7 +129,7 @@ export const PostDetailScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Header title="Post" onBack={() => navigation.goBack()} />
+      <Header title="Conversation" onBack={() => navigation.goBack()} />
 
       {postLoading && !post ? (
         <View style={{ flex: 1 }}>
@@ -181,18 +186,20 @@ export const PostDetailScreen = () => {
       )}
 
       {/* Comment Input */}
-      <View style={styles.inputContainer}>
+      <View style={[styles.inputContainer, { paddingBottom: Math.max(insets.bottom, 12) }]}>
         <Avatar uri={user?.avatar} name={user?.username} size={32} />
         <TextInput
           style={styles.input}
-          placeholder="Post your reply"
-          placeholderTextColor={darkTheme.fgMuted}
+          accessibilityLabel="Write a reply"
+          placeholder="Add to the conversation"
+          placeholderTextColor={colors.fgMuted}
           value={commentText}
           onChangeText={setCommentText}
           multiline
         />
         <TouchableOpacity
           disabled={!commentText.trim() || addCommentMutation.isPending}
+          accessibilityLabel="Send reply"
           onPress={handleSendComment}
           style={[
             styles.replyBtn,
@@ -210,10 +217,10 @@ export const PostDetailScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -221,17 +228,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   errorText: {
-    color: darkTheme.fgMuted,
-    fontSize: 15,
+    color: colors.fgMuted,
+    fontSize: metrics.body,
   },
   commentsDivider: {
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   repliesHeading: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '700',
   },
@@ -240,32 +247,36 @@ const styles = StyleSheet.create({
   },
   commentRow: {
     flexDirection: 'row',
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   commentBody: {
     flex: 1,
+    padding: 14,
+    backgroundColor: colors.surface,
+    borderRadius: 10,
   },
   commentHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 8,
+    flexWrap: 'wrap',
   },
   commentAuthor: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '700',
   },
   commentTime: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
   },
   commentText: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -273,23 +284,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 10,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
+    borderTopColor: colors.border,
   },
   input: {
     flex: 1,
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     maxHeight: 80,
   },
   replyBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     borderRadius: 16,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },

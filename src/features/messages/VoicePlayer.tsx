@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 
 interface VoicePlayerProps {
   url: string;
   duration?: number;
+  isOwn?: boolean;
 }
 
-export const VoicePlayer: React.FC<VoicePlayerProps> = ({ duration = 0 }) => {
+export const VoicePlayer: React.FC<VoicePlayerProps> = ({ duration = 0, isOwn = false }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const [isPlaying, setIsPlaying] = useState(false);
 
   const togglePlay = () => {
@@ -37,10 +40,10 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({ duration = 0 }) => {
       </TouchableOpacity>
 
       <View style={styles.trackContainer}>
-        <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: isPlaying ? '70%' : '15%' }]} />
+        <View style={[styles.progressBarBg, { backgroundColor: isOwn ? 'rgba(255,255,255,0.3)' : colors.borderStrong }]}>
+          <View style={[styles.progressBarFill, { width: isPlaying ? '70%' : '15%', backgroundColor: isOwn ? '#ffffff' : colors.accent }]} />
         </View>
-        <Text style={styles.durationText}>
+        <Text style={[styles.durationText, { color: isOwn ? '#ffffff' : colors.fgMuted }]}>
           {formatTime(duration)}
         </Text>
       </View>
@@ -48,7 +51,7 @@ export const VoicePlayer: React.FC<VoicePlayerProps> = ({ duration = 0 }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -60,7 +63,7 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },

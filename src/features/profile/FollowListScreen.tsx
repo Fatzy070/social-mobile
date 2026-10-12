@@ -15,7 +15,9 @@ import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { useAuthStore } from '../../store/authStore';
 import { UserListSkeleton } from '../../components/common/Skeleton';
 import { User } from '../../types';
@@ -27,6 +29,7 @@ interface FollowListRouteParams {
 }
 
 export const FollowListScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
   const queryClient = useQueryClient();
@@ -191,7 +194,7 @@ export const FollowListScreen = () => {
             {isPendingThisUser ? (
               <ActivityIndicator
                 size="small"
-                color={isFollowed ? darkTheme.fg : '#ffffff'}
+                color={isFollowed ? colors.fg : '#ffffff'}
               />
             ) : (
               <Text
@@ -261,7 +264,7 @@ export const FollowListScreen = () => {
             <Ionicons
               name={activeTab === 'followers' ? 'people-outline' : 'person-add-outline'}
               size={36}
-              color={darkTheme.fgMuted}
+              color={colors.fgMuted}
             />
           </View>
           <Text style={styles.emptyTitle}>
@@ -286,8 +289,8 @@ export const FollowListScreen = () => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={onRefresh}
-              tintColor={darkTheme.accent}
-              colors={[darkTheme.accent]}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
             />
           }
         />
@@ -296,16 +299,16 @@ export const FollowListScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   tabContainer: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
-    backgroundColor: darkTheme.bg,
+    borderBottomColor: colors.border,
+    backgroundColor: colors.bg,
   },
   tabButton: {
     flex: 1,
@@ -315,12 +318,12 @@ const styles = StyleSheet.create({
   },
   tabButtonActive: {},
   tabText: {
-    color: darkTheme.fgMuted,
-    fontSize: 15,
+    color: colors.fgMuted,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontWeight: '700',
   },
   tabIndicator: {
@@ -328,7 +331,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: 3,
     width: 60,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     borderRadius: 3,
   },
   listContent: {
@@ -338,9 +341,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingVertical: 12,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   userInfo: {
     flex: 1,
@@ -349,23 +352,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   username: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '700',
   },
   handle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     marginTop: 1,
   },
   bio: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     marginTop: 4,
     lineHeight: 18,
   },
   actionButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 7,
     borderRadius: 20,
     minWidth: 92,
@@ -373,12 +376,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   followButton: {
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
   },
   followingButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
   },
   actionButtonText: {
     fontSize: 13,
@@ -388,7 +391,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   followingButtonText: {
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   loadingContainer: {
     flex: 1,
@@ -405,20 +408,20 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
   },
   emptyTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
     marginBottom: 6,
     textAlign: 'center',
   },
   emptySubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,

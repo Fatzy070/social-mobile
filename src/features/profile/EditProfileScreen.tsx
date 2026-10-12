@@ -21,9 +21,12 @@ import { Avatar } from '../../components/common/Avatar';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 
 export const EditProfileScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { user, updateUser } = useAuthStore();
   const queryClient = useQueryClient();
@@ -165,7 +168,7 @@ export const EditProfileScreen = () => {
               />
             ) : (
               <View style={styles.coverPlaceholder}>
-                <Ionicons name="image-outline" size={32} color={darkTheme.fgMuted} />
+                <Ionicons name="image-outline" size={32} color={colors.fgMuted} />
                 <Text style={styles.coverPlaceholderText}>Add cover photo</Text>
               </View>
             )}
@@ -194,7 +197,7 @@ export const EditProfileScreen = () => {
             value={username}
             onChangeText={setUsername}
             placeholder="Username"
-            placeholderTextColor={darkTheme.fgMuted}
+            placeholderTextColor={colors.fgMuted}
             autoCapitalize="none"
           />
         </View>
@@ -206,7 +209,7 @@ export const EditProfileScreen = () => {
             value={bio}
             onChangeText={setBio}
             placeholder="Tell us about yourself..."
-            placeholderTextColor={darkTheme.fgMuted}
+            placeholderTextColor={colors.fgMuted}
             multiline
             numberOfLines={4}
           />
@@ -216,17 +219,17 @@ export const EditProfileScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   content: {
     flex: 1,
   },
   saveBtn: {
-    backgroundColor: darkTheme.accent,
-    paddingHorizontal: 16,
+    backgroundColor: colors.accent,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 7,
     borderRadius: 20,
   },
@@ -241,7 +244,7 @@ const styles = StyleSheet.create({
   coverWrapper: {
     width: '100%',
     height: 140,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     position: 'relative',
     justifyContent: 'center',
     alignItems: 'center',
@@ -256,7 +259,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   coverPlaceholderText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -279,24 +282,24 @@ const styles = StyleSheet.create({
   avatarPicker: {
     position: 'relative',
     padding: 3,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
     borderRadius: 45,
   },
   cameraOverlay: {
     position: 'absolute',
     bottom: 2,
     right: 2,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     borderRadius: 16,
     width: 30,
     height: 30,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: darkTheme.bg,
+    borderColor: colors.bg,
   },
   changePhotoText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 13,
     fontWeight: '600',
     marginTop: 8,
@@ -306,20 +309,20 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   fieldLabel: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     fontWeight: '600',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
   },
   bioInput: {
     minHeight: 100,

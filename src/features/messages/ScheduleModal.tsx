@@ -14,7 +14,9 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { useCreateScheduledMessage } from './useMessages';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 
 interface ScheduleModalProps {
   visible: boolean;
@@ -31,6 +33,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
   initialText = '',
   onScheduledSuccess,
 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const [text, setText] = useState(initialText);
 
   // Initialize with 1 hour from current time
@@ -156,11 +159,11 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.headerTitleRow}>
-              <Ionicons name="time" size={20} color={darkTheme.accent} />
+              <Ionicons name="time" size={20} color={colors.accentText} />
               <Text style={styles.title}>Schedule Message</Text>
             </View>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close" size={20} color={darkTheme.fgMuted} />
+              <Ionicons name="close" size={20} color={colors.fgMuted} />
             </TouchableOpacity>
           </View>
 
@@ -169,7 +172,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
           <TextInput
             style={styles.input}
             placeholder="Write your message here..."
-            placeholderTextColor={darkTheme.fgMuted}
+            placeholderTextColor={colors.fgMuted}
             value={text}
             onChangeText={setText}
             multiline
@@ -180,7 +183,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
             <Text style={styles.label}>Delivery Date</Text>
             {Platform.OS === 'ios' ? (
               <View style={styles.iosPickerRow}>
-                <Ionicons name="calendar-outline" size={18} color={darkTheme.accent} style={{ marginRight: 8 }} />
+                <Ionicons name="calendar-outline" size={18} color={colors.accentText} style={{ marginRight: 8 }} />
                 <DateTimePicker
                   value={selectedDate}
                   mode="date"
@@ -188,7 +191,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                   minimumDate={new Date()}
                   onChange={handleDateChange}
                   themeVariant="dark"
-                  accentColor={darkTheme.accent}
+                  accentColor={colors.accent}
                   style={styles.iosPicker}
                 />
               </View>
@@ -198,12 +201,12 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 onPress={() => setShowDatePicker(true)}
               >
                 <View style={styles.pickerBtnContent}>
-                  <Ionicons name="calendar-outline" size={18} color={darkTheme.accent} />
+                  <Ionicons name="calendar-outline" size={18} color={colors.accentText} />
                   <Text style={styles.pickerBtnText}>
                     {format(selectedDate, 'MMMM d, yyyy')}
                   </Text>
                 </View>
-                <Ionicons name="chevron-down" size={16} color={darkTheme.fgMuted} />
+                <Ionicons name="chevron-down" size={16} color={colors.fgMuted} />
               </TouchableOpacity>
             )}
           </View>
@@ -213,14 +216,14 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
             <Text style={styles.label}>Delivery Time</Text>
             {Platform.OS === 'ios' ? (
               <View style={styles.iosPickerRow}>
-                <Ionicons name="time-outline" size={18} color={darkTheme.accent} style={{ marginRight: 8 }} />
+                <Ionicons name="time-outline" size={18} color={colors.accentText} style={{ marginRight: 8 }} />
                 <DateTimePicker
                   value={selectedDate}
                   mode="time"
                   display="default"
                   onChange={handleTimeChange}
                   themeVariant="dark"
-                  accentColor={darkTheme.accent}
+                  accentColor={colors.accent}
                   style={styles.iosPicker}
                 />
               </View>
@@ -230,12 +233,12 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
                 onPress={() => setShowTimePicker(true)}
               >
                 <View style={styles.pickerBtnContent}>
-                  <Ionicons name="time-outline" size={18} color={darkTheme.accent} />
+                  <Ionicons name="time-outline" size={18} color={colors.accentText} />
                   <Text style={styles.pickerBtnText}>
                     {format(selectedDate, 'h:mm a')}
                   </Text>
                 </View>
-                <Ionicons name="chevron-down" size={16} color={darkTheme.fgMuted} />
+                <Ionicons name="chevron-down" size={16} color={colors.fgMuted} />
               </TouchableOpacity>
             )}
           </View>
@@ -266,12 +269,12 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
               <Ionicons
                 name={isFutureDate ? 'checkmark-circle-outline' : 'alert-circle-outline'}
                 size={16}
-                color={isFutureDate ? darkTheme.success : darkTheme.error}
+                color={isFutureDate ? colors.success : colors.error}
               />
               <Text
                 style={[
                   styles.previewText,
-                  !isFutureDate && { color: darkTheme.error },
+                  !isFutureDate && { color: colors.error },
                 ]}
               >
                 {isFutureDate
@@ -312,7 +315,7 @@ export const ScheduleModal: React.FC<ScheduleModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.75)',
@@ -323,10 +326,10 @@ const styles = StyleSheet.create({
   modalCard: {
     width: '100%',
     maxWidth: 400,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderRadius: 24,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     padding: 20,
   },
   header: {
@@ -336,7 +339,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   headerTitleRow: {
     flexDirection: 'row',
@@ -346,7 +349,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '700',
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   closeBtn: {
     padding: 4,
@@ -354,18 +357,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '600',
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     marginBottom: 8,
     marginTop: 4,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   input: {
-    backgroundColor: darkTheme.bg,
-    borderRadius: 14,
+    backgroundColor: colors.bg,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
-    color: darkTheme.fg,
+    borderColor: colors.border,
+    color: colors.fg,
     padding: 12,
     fontSize: 14,
     minHeight: 70,
@@ -378,10 +381,10 @@ const styles = StyleSheet.create({
   iosPickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.bg,
-    borderRadius: 14,
+    backgroundColor: colors.bg,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
@@ -392,10 +395,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: darkTheme.bg,
-    borderRadius: 14,
+    backgroundColor: colors.bg,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     paddingHorizontal: 14,
     paddingVertical: 12,
   },
@@ -407,13 +410,13 @@ const styles = StyleSheet.create({
   pickerBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   previewBox: {
     backgroundColor: 'rgba(28, 28, 32, 0.6)',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginBottom: 16,
@@ -425,7 +428,7 @@ const styles = StyleSheet.create({
   },
   previewText: {
     fontSize: 12,
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontWeight: '500',
   },
   buttonRow: {
@@ -434,23 +437,23 @@ const styles = StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: darkTheme.border,
-    borderRadius: 14,
+    borderColor: colors.border,
+    borderRadius: metrics.radius,
     paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cancelBtnText: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     fontWeight: '600',
   },
   scheduleBtn: {
     flex: 1.4,
-    backgroundColor: darkTheme.accent,
-    borderRadius: 14,
+    backgroundColor: colors.accent,
+    borderRadius: metrics.radius,
     paddingVertical: 13,
     alignItems: 'center',
     justifyContent: 'center',

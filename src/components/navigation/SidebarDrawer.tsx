@@ -5,7 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
-  Dimensions,
+  useWindowDimensions,
   TouchableWithoutFeedback,
   ScrollView,
   Platform,
@@ -29,13 +29,14 @@ interface SidebarDrawerProps {
   onClose: () => void;
 }
 
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const DRAWER_WIDTH = Math.min(SCREEN_WIDTH * 0.82, 330);
+
 
 export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose }) => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
   const { user, savedAccounts, logout, switchAccount, setAuth, removeSavedAccount } = useAuthStore();
+  const { width } = useWindowDimensions();
+  const DRAWER_WIDTH = Math.min(width * 0.86, 350);
   const { colors, isDark, toggleTheme } = useTheme();
 
   const [isAccountsExpanded, setIsAccountsExpanded] = useState(false);
@@ -276,9 +277,9 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                     </View>
 
                     {isSwitching ? (
-                      <ActivityIndicator size="small" color={colors.accent} />
+                      <ActivityIndicator size="small" color={colors.accentText} />
                     ) : isActive ? (
-                      <Ionicons name="checkmark-circle" size={18} color={colors.accent} />
+                      <Ionicons name="checkmark-circle" size={18} color={colors.accentText} />
                     ) : (
                       <TouchableOpacity
                         onPress={() => removeSavedAccount(acc._id)}
@@ -296,7 +297,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({ isOpen, onClose })
                 onPress={() => setShowAddAccountModal(true)}
                 activeOpacity={0.7}
               >
-                <Ionicons name="person-add-outline" size={18} color={colors.accent} />
+                <Ionicons name="person-add-outline" size={18} color={colors.accentText} />
                 <Text style={[styles.addAccountText, { color: colors.accent }]}>Add an existing account</Text>
               </TouchableOpacity>
             </View>

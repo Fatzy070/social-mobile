@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import {
   View,
@@ -5,7 +6,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   Linking,
-  Dimensions,
   Share,
   Alert,
   Modal,
@@ -14,7 +14,9 @@ import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { Post } from '../../types';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Avatar } from '../common/Avatar';
 import { parseTextWithLinks } from '../../utils/urlHelper';
 import { ImageViewerModal } from '../common/ImageViewerModal';
@@ -37,7 +39,6 @@ interface PostCardProps {
   onPressAuthor?: (authorId: string) => void;
 }
 
-const { width } = Dimensions.get('window');
 
 export const PostCard: React.FC<PostCardProps> = ({
   post,
@@ -55,6 +56,8 @@ export const PostCard: React.FC<PostCardProps> = ({
   onPressPost,
   onPressAuthor,
 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
   const [activeImageIndex, setActiveImageIndex] = useState<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -133,7 +136,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           <Image
             source={{ uri: post.media[0].url }}
             style={styles.singleImage}
-            contentFit="cover"
+            contentFit="contain"
             transition={200}
           />
         </TouchableOpacity>
@@ -202,7 +205,7 @@ export const PostCard: React.FC<PostCardProps> = ({
       {/* Pinned Post Indicator Banner */}
       {isPinned && (
         <View style={styles.pinnedBanner}>
-          <Ionicons name="pin" size={13} color={darkTheme.accent} />
+          <Ionicons name="pin" size={13} color={colors.accentText} />
           <Text style={styles.pinnedBannerText}>Pinned Post</Text>
         </View>
       )}
@@ -223,17 +226,20 @@ export const PostCard: React.FC<PostCardProps> = ({
                 {post.authorId?.username}
               </Text>
               <Text style={styles.handleText} numberOfLines={1}>
-                @{post.authorId?.username?.toLowerCase()} · {timeAgo}
+                @{post.authorId?.username?.toLowerCase()}
               </Text>
             </View>
           </TouchableOpacity>
 
+          <Text style={styles.timestamp}>{timeAgo}</Text>
           <TouchableOpacity
+            accessibilityLabel="Post options"
+            accessibilityRole="button"
             onPress={() => setIsMenuOpen(true)}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={styles.menuTrigger}
           >
-            <Ionicons name="ellipsis-horizontal" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="ellipsis-horizontal" size={18} color={colors.fgMuted} />
           </TouchableOpacity>
         </View>
 
@@ -277,16 +283,18 @@ export const PostCard: React.FC<PostCardProps> = ({
       <View style={styles.actionBar}>
         {/* 1. Comment */}
         <TouchableOpacity
+          accessibilityLabel="Reply to post"
           onPress={() => onComment?.(post._id)}
           style={styles.actionBtn}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="chatbubble-outline" size={18} color={darkTheme.fgMuted} />
+          <Ionicons name="chatbubble-outline" size={18} color={colors.fgMuted} />
           <Text style={styles.actionText}>{post.commentCount || 0}</Text>
         </TouchableOpacity>
 
         {/* 2. Repost / Share (Opens Share & Quote Modal) */}
         <TouchableOpacity
+          accessibilityLabel="Share or repost"
           onPress={() => setIsShareModalOpen(true)}
           style={styles.actionBtn}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -294,12 +302,12 @@ export const PostCard: React.FC<PostCardProps> = ({
           <Ionicons
             name="repeat-outline"
             size={20}
-            color={isReposted ? darkTheme.success : darkTheme.fgMuted}
+            color={isReposted ? colors.success : colors.fgMuted}
           />
           <Text
             style={[
               styles.actionText,
-              isReposted && { color: darkTheme.success, fontWeight: '700' },
+              isReposted && { color: colors.success, fontWeight: '700' },
             ]}
           >
             {(post.reposts?.length || 0) + (post.quoteCount || 0)}
@@ -308,6 +316,8 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         {/* 3. Like */}
         <TouchableOpacity
+          accessibilityLabel={isLiked ? "Unlike post" : "Like post"}
+          accessibilityState={{ selected: isLiked }}
           onPress={() => onLike?.(post._id)}
           style={styles.actionBtn}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -315,12 +325,12 @@ export const PostCard: React.FC<PostCardProps> = ({
           <Ionicons
             name={isLiked ? 'heart' : 'heart-outline'}
             size={19}
-            color={isLiked ? darkTheme.like : darkTheme.fgMuted}
+            color={isLiked ? colors.like : colors.fgMuted}
           />
           <Text
             style={[
               styles.actionText,
-              isLiked && { color: darkTheme.like, fontWeight: '700' },
+              isLiked && { color: colors.like, fontWeight: '700' },
             ]}
           >
             {post.likesCount ?? post.likes?.length ?? 0}
@@ -329,6 +339,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
         {/* 4. Bookmark */}
         <TouchableOpacity
+          accessibilityLabel={isBookmarked ? "Remove bookmark" : "Bookmark post"}
           onPress={() => onBookmark?.(post._id)}
           style={styles.actionBtn}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
@@ -336,7 +347,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           <Ionicons
             name={isBookmarked ? 'bookmark' : 'bookmark-outline'}
             size={18}
-            color={isBookmarked ? darkTheme.bookmark : darkTheme.fgMuted}
+            color={isBookmarked ? colors.bookmark : colors.fgMuted}
           />
         </TouchableOpacity>
       </View>
@@ -370,7 +381,7 @@ export const PostCard: React.FC<PostCardProps> = ({
           onPress={() => setIsMenuOpen(false)}
           style={styles.modalBackdrop}
         >
-          <View style={styles.menuSheet}>
+          <View style={[styles.menuSheet, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
             <View style={styles.sheetHandle} />
 
             {isOwnPost ? (
@@ -380,7 +391,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                     <Ionicons
                       name={isPinned ? 'pin' : 'pin-outline'}
                       size={20}
-                      color={isPinned ? darkTheme.accent : darkTheme.fg}
+                      color={isPinned ? colors.accent : colors.fg}
                     />
                     <Text style={styles.menuActionText}>
                       {isPinned ? 'Unpin from profile' : 'Pin to your profile'}
@@ -392,12 +403,12 @@ export const PostCard: React.FC<PostCardProps> = ({
                   <TouchableOpacity
                     style={[
                       styles.menuAction,
-                      (onPin || onUnpin) && { borderTopWidth: 1, borderTopColor: darkTheme.border },
+                      (onPin || onUnpin) && { borderTopWidth: 1, borderTopColor: colors.border },
                     ]}
                     onPress={handleDeletePress}
                   >
-                    <Ionicons name="trash-outline" size={20} color={darkTheme.error} />
-                    <Text style={[styles.menuActionText, { color: darkTheme.error }]}>
+                    <Ionicons name="trash-outline" size={20} color={colors.error} />
+                    <Text style={[styles.menuActionText, { color: colors.error }]}>
                       Delete post
                     </Text>
                   </TouchableOpacity>
@@ -411,7 +422,7 @@ export const PostCard: React.FC<PostCardProps> = ({
                   Alert.alert('Report Post', 'Thank you for reporting. Our moderation team will review this post.');
                 }}
               >
-                <Ionicons name="flag-outline" size={20} color={darkTheme.fgMuted} />
+                <Ionicons name="flag-outline" size={20} color={colors.fgMuted} />
                 <Text style={styles.menuActionText}>Report post</Text>
               </TouchableOpacity>
             )}
@@ -422,34 +433,36 @@ export const PostCard: React.FC<PostCardProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
+  timestamp: { fontSize: 10, color: colors.fgMuted, maxWidth: 66, marginLeft: 8 },
   container: {
-    backgroundColor: darkTheme.bg,
+    marginBottom: 10,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
-    paddingTop: 10,
-    paddingBottom: 8,
+    borderBottomColor: colors.border,
+    paddingTop: 24,
+    paddingBottom: 12,
   },
   pinnedBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     marginBottom: 8,
   },
   pinnedBannerText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 12,
     fontWeight: '700',
   },
   cardPressable: {
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 22,
   },
   authorSection: {
     flexDirection: 'row',
@@ -461,12 +474,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   authorName: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '700',
   },
   handleText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -474,21 +487,21 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   contentText: {
-    color: darkTheme.fg,
-    fontSize: 15,
-    lineHeight: 22,
+    color: colors.fg,
+    fontSize: metrics.body,
+    lineHeight: metrics.bodyLine,
     marginBottom: 10,
   },
   linkText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     textDecorationLine: 'underline',
   },
   singleImageContainer: {
     width: '100%',
-    height: 240,
-    borderRadius: 14,
+    aspectRatio: 1.25,
+    borderRadius: metrics.radius,
     overflow: 'hidden',
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     marginBottom: 10,
   },
   singleImage: {
@@ -502,11 +515,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   gridItem: {
-    width: (width - 32 - 6) / 2,
+    width: '48.5%',
+    flexGrow: 1,
     height: 140,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
   },
   gridImage: {
     width: '100%',
@@ -514,10 +528,10 @@ const styles = StyleSheet.create({
   },
   quotedContainer: {
     borderWidth: 1,
-    borderColor: darkTheme.borderStrong,
+    borderColor: colors.borderStrong,
     borderRadius: 12,
     padding: 10,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     marginBottom: 10,
   },
   quotedHeader: {
@@ -527,12 +541,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   quotedAuthorName: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     fontWeight: '600',
   },
   quotedContent: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 6,
@@ -546,17 +560,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 24,
-    paddingTop: 8,
+    marginHorizontal: 20,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingTop: 10,
   },
   actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 4,
+    minHeight: 44,
+    minWidth: 44,
+    justifyContent: 'center',
   },
   actionText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     fontWeight: '500',
   },
@@ -566,18 +584,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   menuSheet: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 10,
     paddingBottom: 34,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
   },
   sheetHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: darkTheme.borderStrong,
+    backgroundColor: colors.borderStrong,
     alignSelf: 'center',
     marginBottom: 14,
   },
@@ -588,8 +606,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   menuActionText: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
 });

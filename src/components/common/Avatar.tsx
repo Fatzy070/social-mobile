@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Image } from 'expo-image';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
 
 interface AvatarProps {
   uri?: string | null;
@@ -10,6 +11,7 @@ interface AvatarProps {
 }
 
 export const Avatar: React.FC<AvatarProps> = ({ uri, name = 'User', size = 42 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const initial = (name || 'U').trim().charAt(0).toUpperCase();
 
   if (uri) {
@@ -35,12 +37,12 @@ export const Avatar: React.FC<AvatarProps> = ({ uri, name = 'User', size = 42 })
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   image: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
   },
   fallback: {
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },

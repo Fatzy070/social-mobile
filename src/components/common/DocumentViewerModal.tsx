@@ -15,7 +15,9 @@ import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 
 interface DocumentViewerModalProps {
   visible: boolean;
@@ -30,6 +32,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
   fileName,
   onClose,
 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
 
@@ -130,7 +133,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
             startInLoadingState={true}
             renderLoading={() => (
               <View style={styles.loadingOverlay}>
-                <ActivityIndicator size="large" color={darkTheme.accent} />
+                <ActivityIndicator size="large" color={colors.accentText} />
                 <Text style={styles.loadingText}>Loading document preview...</Text>
               </View>
             )}
@@ -149,7 +152,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a0c',
@@ -157,7 +160,7 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: Platform.OS === 'ios' ? 50 : 20,
     paddingBottom: 14,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     backgroundColor: '#121214',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
@@ -200,7 +203,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   loadingText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
   },
 });

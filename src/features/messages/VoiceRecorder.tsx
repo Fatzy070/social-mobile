@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 
 interface VoiceRecorderProps {
   conversationId: string;
@@ -12,6 +14,7 @@ interface VoiceRecorderProps {
 export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   onCancel,
 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const [isRecording, setIsRecording] = useState(false);
   const [durationSecs, setDurationSecs] = useState(0);
   const timerRef = React.useRef<any>(null);
@@ -58,7 +61,7 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={cancelRecording} style={styles.cancelBtn}>
-        <Ionicons name="trash-outline" size={20} color={darkTheme.error} />
+        <Ionicons name="trash-outline" size={20} color={colors.error} />
       </TouchableOpacity>
 
       <View style={styles.recordStatus}>
@@ -81,17 +84,17 @@ export const VoiceRecorder: React.FC<VoiceRecorderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderRadius: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
   },
   cancelBtn: {
     padding: 6,
@@ -105,13 +108,13 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: darkTheme.fgMuted,
+    backgroundColor: colors.fgMuted,
   },
   pulseDotActive: {
-    backgroundColor: darkTheme.error,
+    backgroundColor: colors.error,
   },
   timerText: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '600',
   },
@@ -119,7 +122,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -127,7 +130,7 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 19,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },

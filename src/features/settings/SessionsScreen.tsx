@@ -15,11 +15,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { Header } from '../../components/common/Header';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { CardRowSkeleton } from '../../components/common/Skeleton';
 import { UserSession } from '../../types';
 
 export const SessionsScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
 
@@ -61,9 +64,9 @@ export const SessionsScreen = () => {
 
   const getDeviceIcon = (type: string, os: string) => {
     if (type === 'mobile' || os === 'iOS' || os === 'Android') {
-      return <Ionicons name="phone-portrait-outline" size={22} color={darkTheme.accent} />;
+      return <Ionicons name="phone-portrait-outline" size={22} color={colors.accentText} />;
     }
-    return <Ionicons name="laptop-outline" size={22} color={darkTheme.accent} />;
+    return <Ionicons name="laptop-outline" size={22} color={colors.accentText} />;
   };
 
   const renderItem = ({ item }: { item: UserSession }) => {
@@ -112,7 +115,7 @@ export const SessionsScreen = () => {
       <Header title="Active Sessions" onBack={() => navigation.goBack()} />
 
       <View style={styles.infoBanner}>
-        <Ionicons name="shield-checkmark-outline" size={20} color={darkTheme.accent} />
+        <Ionicons name="shield-checkmark-outline" size={20} color={colors.accentText} />
         <Text style={styles.infoBannerText}>
           Manage devices and browsers logged into your Nexus Social account.
         </Text>
@@ -137,23 +140,23 @@ export const SessionsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   infoBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
-    backgroundColor: darkTheme.surface,
-    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   infoBannerText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     flex: 1,
     lineHeight: 18,
@@ -164,18 +167,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   emptyText: {
-    color: darkTheme.fgMuted,
-    fontSize: 15,
+    color: colors.fgMuted,
+    fontSize: metrics.body,
   },
   listContent: {
     padding: 16,
     gap: 12,
   },
   sessionCard: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,35 +199,35 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   deviceTitle: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '700',
   },
   currentBadge: {
-    backgroundColor: darkTheme.accentMuted,
+    backgroundColor: colors.accentMuted,
     borderRadius: 6,
     paddingHorizontal: 6,
     paddingVertical: 4,
   },
   currentBadgeText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 10,
     fontWeight: '700',
   },
   sessionMeta: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 4,
   },
   revokeBtn: {
     borderWidth: 1,
-    borderColor: darkTheme.error,
-    borderRadius: 14,
+    borderColor: colors.error,
+    borderRadius: metrics.radius,
     paddingHorizontal: 12,
     paddingVertical: 5,
   },
   revokeBtnText: {
-    color: darkTheme.error,
+    color: colors.error,
     fontSize: 12,
     fontWeight: '600',
   },

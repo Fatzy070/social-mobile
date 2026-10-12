@@ -1,3 +1,4 @@
+import { ScreenIntro } from '../../components/common/ScreenIntro';
 import React from 'react';
 import {
   View,
@@ -14,9 +15,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Header } from '../../components/common/Header';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../api/client';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 
 export const SettingsScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { user, updateUser, logout } = useAuthStore();
   const queryClient = useQueryClient();
@@ -89,34 +93,35 @@ export const SettingsScreen = () => {
       <Header title="Settings" onBack={() => navigation.goBack()} />
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScreenIntro label="Your preferences" title="Make Nexus yours." description="Choose what you share, hear, and see." />
         {/* Account Section */}
-        <Text style={styles.sectionTitle}>Account</Text>
+        <Text style={styles.sectionTitle}>Your space</Text>
         <View style={styles.card}>
           <TouchableOpacity
             style={styles.row}
             onPress={() => navigation.navigate('EditProfile')}
           >
-            <Ionicons name="person-outline" size={20} color={darkTheme.fg} />
+            <Ionicons name="person-outline" size={20} color={colors.fg} />
             <Text style={styles.rowText}>Edit Profile</Text>
-            <Ionicons name="chevron-forward" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="chevron-forward" size={18} color={colors.fgMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.row}
             onPress={() => navigation.navigate('Bookmarks')}
           >
-            <Ionicons name="bookmark-outline" size={20} color={darkTheme.fg} />
+            <Ionicons name="bookmark-outline" size={20} color={colors.fg} />
             <Text style={styles.rowText}>Bookmarks</Text>
-            <Ionicons name="chevron-forward" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="chevron-forward" size={18} color={colors.fgMuted} />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.row}
             onPress={() => navigation.navigate('Sessions')}
           >
-            <Ionicons name="laptop-outline" size={20} color={darkTheme.fg} />
+            <Ionicons name="laptop-outline" size={20} color={colors.fg} />
             <Text style={styles.rowText}>Active Sessions</Text>
-            <Ionicons name="chevron-forward" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="chevron-forward" size={18} color={colors.fgMuted} />
           </TouchableOpacity>
         </View>
 
@@ -124,7 +129,7 @@ export const SettingsScreen = () => {
         <Text style={styles.sectionTitle}>Privacy</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <Ionicons name="lock-closed-outline" size={20} color={darkTheme.fg} />
+            <Ionicons name="lock-closed-outline" size={20} color={colors.fg} />
             <View style={styles.rowTextContainer}>
               <Text style={styles.rowText}>Private Account</Text>
               <Text style={styles.rowSubtext}>Only approved followers can view your posts</Text>
@@ -132,17 +137,17 @@ export const SettingsScreen = () => {
             <Switch
               value={isPrivate}
               onValueChange={togglePrivateAccount}
-              trackColor={{ false: darkTheme.surface, true: darkTheme.accent }}
+              trackColor={{ false: colors.surface, true: colors.accent }}
               thumbColor="#ffffff"
             />
           </View>
         </View>
 
         {/* Notification Preferences */}
-        <Text style={styles.sectionTitle}>Notification Preferences</Text>
+        <Text style={styles.sectionTitle}>Keep me in the loop</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <Ionicons name="heart-outline" size={20} color={darkTheme.like} />
+            <Ionicons name="heart-outline" size={20} color={colors.like} />
             <View style={styles.rowTextContainer}>
               <Text style={styles.rowText}>Likes</Text>
               <Text style={styles.rowSubtext}>Notify when someone likes your posts</Text>
@@ -150,13 +155,13 @@ export const SettingsScreen = () => {
             <Switch
               value={notifs.likes ?? true}
               onValueChange={(val) => toggleNotification('likes', val)}
-              trackColor={{ false: darkTheme.surface, true: darkTheme.accent }}
+              trackColor={{ false: colors.surface, true: colors.accent }}
               thumbColor="#ffffff"
             />
           </View>
 
           <View style={styles.row}>
-            <Ionicons name="chatbubble-outline" size={20} color={darkTheme.accent} />
+            <Ionicons name="chatbubble-outline" size={20} color={colors.accentText} />
             <View style={styles.rowTextContainer}>
               <Text style={styles.rowText}>Comments</Text>
               <Text style={styles.rowSubtext}>Notify when someone replies to your posts</Text>
@@ -164,13 +169,13 @@ export const SettingsScreen = () => {
             <Switch
               value={notifs.comments ?? true}
               onValueChange={(val) => toggleNotification('comments', val)}
-              trackColor={{ false: darkTheme.surface, true: darkTheme.accent }}
+              trackColor={{ false: colors.surface, true: colors.accent }}
               thumbColor="#ffffff"
             />
           </View>
 
           <View style={styles.row}>
-            <Ionicons name="person-add-outline" size={20} color={darkTheme.success} />
+            <Ionicons name="person-add-outline" size={20} color={colors.success} />
             <View style={styles.rowTextContainer}>
               <Text style={styles.rowText}>Follows</Text>
               <Text style={styles.rowSubtext}>Notify when someone starts following you</Text>
@@ -178,13 +183,13 @@ export const SettingsScreen = () => {
             <Switch
               value={notifs.follows ?? true}
               onValueChange={(val) => toggleNotification('follows', val)}
-              trackColor={{ false: darkTheme.surface, true: darkTheme.accent }}
+              trackColor={{ false: colors.surface, true: colors.accent }}
               thumbColor="#ffffff"
             />
           </View>
 
           <View style={styles.row}>
-            <Ionicons name="mail-outline" size={20} color={darkTheme.accent} />
+            <Ionicons name="mail-outline" size={20} color={colors.accentText} />
             <View style={styles.rowTextContainer}>
               <Text style={styles.rowText}>Direct Messages</Text>
               <Text style={styles.rowSubtext}>Notify when someone sends a message</Text>
@@ -192,13 +197,13 @@ export const SettingsScreen = () => {
             <Switch
               value={notifs.messages ?? true}
               onValueChange={(val) => toggleNotification('messages', val)}
-              trackColor={{ false: darkTheme.surface, true: darkTheme.accent }}
+              trackColor={{ false: colors.surface, true: colors.accent }}
               thumbColor="#ffffff"
             />
           </View>
 
           <View style={styles.row}>
-            <Ionicons name="bookmark-outline" size={20} color={darkTheme.bookmark} />
+            <Ionicons name="bookmark-outline" size={20} color={colors.bookmark} />
             <View style={styles.rowTextContainer}>
               <Text style={styles.rowText}>Bookmarks</Text>
               <Text style={styles.rowSubtext}>Notify when someone bookmarks your post</Text>
@@ -206,7 +211,7 @@ export const SettingsScreen = () => {
             <Switch
               value={notifs.bookmarks ?? true}
               onValueChange={(val) => toggleNotification('bookmarks', val)}
-              trackColor={{ false: darkTheme.surface, true: darkTheme.accent }}
+              trackColor={{ false: colors.surface, true: colors.accent }}
               thumbColor="#ffffff"
             />
           </View>
@@ -215,8 +220,8 @@ export const SettingsScreen = () => {
         {/* Logout */}
         <View style={styles.card}>
           <TouchableOpacity style={styles.row} onPress={handleLogout}>
-            <Ionicons name="log-out-outline" size={20} color={darkTheme.error} />
-            <Text style={[styles.rowText, { color: darkTheme.error }]}>Log Out</Text>
+            <Ionicons name="log-out-outline" size={20} color={colors.error} />
+            <Text style={[styles.rowText, { color: colors.error }]}>Log Out</Text>
           </TouchableOpacity>
         </View>
 
@@ -226,17 +231,17 @@ export const SettingsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   content: {
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 16,
   },
   sectionTitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -245,37 +250,37 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   card: {
-    backgroundColor: darkTheme.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     marginBottom: 20,
     overflow: 'hidden',
   },
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   rowTextContainer: {
     flex: 1,
   },
   rowText: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
   rowSubtext: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
   versionText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     textAlign: 'center',
     marginTop: 12,

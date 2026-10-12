@@ -1,3 +1,4 @@
+import { ScreenIntro } from '../../components/common/ScreenIntro';
 import React from 'react';
 import {
   View,
@@ -18,10 +19,13 @@ import { useTheme } from '../../theme/ThemeContext';
 import { usePostMutations } from './useFeed';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Post } from '../../types';
 
 export const BookmarksScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
   const { likePost, unlikePost, bookmarkPost, repostPost, pinPost, deletePost } = usePostMutations();
@@ -76,7 +80,7 @@ export const BookmarksScreen = () => {
         <PostFeedSkeleton count={3} />
       ) : posts.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Ionicons name="bookmark-outline" size={48} color={darkTheme.fgMuted} />
+          <Ionicons name="bookmark-outline" size={48} color={colors.fgMuted} />
           <Text style={styles.emptyTitle}>Save posts for later</Text>
           <Text style={styles.emptySubtitle}>
             When you bookmark posts, they will show up here.
@@ -84,6 +88,7 @@ export const BookmarksScreen = () => {
         </View>
       ) : (
         <FlatList
+          ListHeaderComponent={<ScreenIntro label="Saved posts" title="Worth keeping." description="The things you want to come back to." />}
           data={posts}
           keyExtractor={(item) => item._id}
           renderItem={renderPost}
@@ -91,8 +96,8 @@ export const BookmarksScreen = () => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={darkTheme.accent}
-              colors={[darkTheme.accent]}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
             />
           }
           contentContainerStyle={styles.listContent}
@@ -103,10 +108,10 @@ export const BookmarksScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -115,13 +120,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
     marginTop: 12,
   },
   emptySubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     textAlign: 'center',
     marginTop: 6,

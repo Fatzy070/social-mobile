@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
   View,
+  ScrollView,
   Text,
   TextInput,
   StyleSheet,
@@ -14,9 +15,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuthStore } from '../../store/authStore';
 import { apiClient } from '../../api/client';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 
 export const LoginScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { setAuth } = useAuthStore();
 
@@ -71,24 +75,24 @@ export const LoginScreen = () => {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <View style={styles.inner}>
+      <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {/* Brand Header */}
+        <View style={styles.wordmark}><View style={styles.wordmarkBadge}><Text style={styles.wordmarkInitial}>N</Text></View><Text style={styles.wordmarkText}>Nexus.</Text></View>
         <View style={styles.brandContainer}>
-          <View style={styles.logoBadge}>
-            <Text style={styles.logoText}>N</Text>
-          </View>
-          <Text style={styles.brandTitle}>Nexus Social</Text>
-          <Text style={styles.brandSubtitle}>Where ideas connect.</Text>
+          <Text style={styles.kicker}>YOUR PEOPLE ARE HERE</Text>
+          <Text style={styles.brandTitle}>Good to have
+you back.</Text>
+          <Text style={styles.brandSubtitle}>Sign in and pick up the conversation.</Text>
         </View>
 
-        {/* Input Fields */}
         <View style={styles.form}>
           <View style={styles.inputWrapper}>
-            <Ionicons name="mail-outline" size={20} color={darkTheme.fgMuted} />
+            <Ionicons name="mail-outline" size={20} color={colors.fgMuted} />
             <TextInput
               style={styles.input}
+              accessibilityLabel="Email address"
               placeholder="Email address"
-              placeholderTextColor={darkTheme.fgMuted}
+              placeholderTextColor={colors.fgMuted}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -98,21 +102,22 @@ export const LoginScreen = () => {
           </View>
 
           <View style={styles.inputWrapper}>
-            <Ionicons name="lock-closed-outline" size={20} color={darkTheme.fgMuted} />
+            <Ionicons name="lock-closed-outline" size={20} color={colors.fgMuted} />
             <TextInput
               style={styles.input}
+              accessibilityLabel="Password"
               placeholder="Password"
-              placeholderTextColor={darkTheme.fgMuted}
+              placeholderTextColor={colors.fgMuted}
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
             />
-            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+            <TouchableOpacity accessibilityLabel={showPassword ? 'Hide password' : 'Show password'} onPress={() => setShowPassword(!showPassword)}>
               <Ionicons
                 name={showPassword ? 'eye-off-outline' : 'eye-outline'}
                 size={20}
-                color={darkTheme.fgMuted}
+                color={colors.fgMuted}
               />
             </TouchableOpacity>
           </View>
@@ -125,7 +130,7 @@ export const LoginScreen = () => {
             {isLoading ? (
               <ActivityIndicator color="#ffffff" />
             ) : (
-              <Text style={styles.primaryButtonText}>Sign In</Text>
+              <Text style={styles.primaryButtonText}>Continue to Nexus</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -134,81 +139,72 @@ export const LoginScreen = () => {
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account?</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text style={styles.signupLink}> Sign Up</Text>
+            <Text style={styles.signupLink}> Create account</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   inner: {
-    flex: 1,
-    justifyContent: 'center',
+    flexGrow: 1,
+    paddingVertical: 64,
+    justifyContent: 'flex-start',
     paddingHorizontal: 24,
   },
+  wordmark: { flexDirection: 'row', alignItems: 'center', gap: 9, marginBottom: 52 },
+  wordmarkBadge: { width: 32, height: 32, borderRadius: 7, backgroundColor: colors.fg, alignItems: 'center', justifyContent: 'center' },
+  wordmarkInitial: { color: colors.bg, fontSize: 21, fontWeight: '800' },
+  wordmarkText: { color: colors.fg, fontSize: 25, fontWeight: '800', letterSpacing: -1 },
+  kicker: { fontSize: 10, letterSpacing: 1.7, color: colors.accentText, fontWeight: '700', marginBottom: 16 },
   brandContainer: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 40,
   },
-  logoBadge: {
-    width: 60,
-    height: 60,
-    borderRadius: 20,
-    backgroundColor: darkTheme.accent,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-    shadowColor: darkTheme.accent,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  logoText: {
-    color: '#ffffff',
-    fontSize: 32,
-    fontWeight: '800',
-  },
   brandTitle: {
-    color: darkTheme.fg,
-    fontSize: 26,
+    color: colors.fg,
+    fontSize: 42,
+    lineHeight: 46,
     fontWeight: '800',
-    letterSpacing: 0.5,
+    letterSpacing: -1.2,
   },
   brandSubtitle: {
-    color: darkTheme.fgMuted,
-    fontSize: 15,
+    color: colors.fgMuted,
+    fontSize: metrics.body,
     marginTop: 6,
   },
   form: {
     gap: 16,
+    padding: 20,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
-    paddingHorizontal: 16,
+    borderColor: colors.border,
+    paddingHorizontal: metrics.gutter,
     height: 52,
     gap: 12,
   },
   input: {
     flex: 1,
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
   },
   primaryButton: {
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     height: 52,
-    borderRadius: 14,
+    borderRadius: metrics.radius,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 8,
@@ -227,11 +223,11 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   footerText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
   },
   signupLink: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 14,
     fontWeight: '700',
   },

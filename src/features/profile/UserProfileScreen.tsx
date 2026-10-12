@@ -1,3 +1,4 @@
+import { ProfileIdentity } from '../../components/profile/ProfileIdentity';
 import React, { useState } from 'react';
 import {
   View,
@@ -8,22 +9,23 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Header } from '../../components/common/Header';
-import { Avatar } from '../../components/common/Avatar';
 import { PostCard } from '../../components/feed/PostCard';
 import { useAuthStore } from '../../store/authStore';
 import { usePostMutations } from '../feed/useFeed';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { ProfileHeaderSkeleton, PostFeedSkeleton } from '../../components/common/Skeleton';
 import { Post, User } from '../../types';
 
 export const UserProfileScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { user: authUser } = useAuthStore();
@@ -119,20 +121,8 @@ export const UserProfileScreen = () => {
 
   const renderHeader = () => (
     <View style={styles.profileHeader}>
-      <View style={styles.coverWrapper}>
-        {user?.coverImage ? (
-          <Image source={{ uri: user.coverImage }} style={styles.coverImage} contentFit="cover" />
-        ) : (
-          <View style={styles.coverPlaceholder} />
-        )}
-      </View>
-
-      <View style={styles.avatarRow}>
-        <View style={styles.avatarWrapper}>
-          <Avatar uri={user?.avatar} name={user?.username} size={80} />
-        </View>
-
-        {isOwnProfile ? (
+      <ProfileIdentity username={user?.username} avatar={user?.avatar} cover={user?.coverImage} bio={user?.bio}
+        actions={<>        {isOwnProfile ? (
           <TouchableOpacity
             onPress={() => navigation.navigate('EditProfile')}
             style={styles.editBtn}
@@ -154,16 +144,8 @@ export const UserProfileScreen = () => {
               </Text>
             </TouchableOpacity>
           </View>
-        )}
-      </View>
-
-      <View style={styles.infoSection}>
-        <Text style={styles.usernameText}>{user?.username}</Text>
-        <Text style={styles.handleText}>@{user?.username?.toLowerCase()}</Text>
-
-        {user?.bio ? <Text style={styles.bioText}>{user.bio}</Text> : null}
-
-        <View style={styles.statsRow}>
+        )}</>}
+        relationships={<>        <View style={styles.statsRow}>
           <TouchableOpacity
             style={styles.statItem}
             activeOpacity={0.7}
@@ -192,8 +174,8 @@ export const UserProfileScreen = () => {
             <Text style={styles.statNumber}>{user?.followers?.length || 0}</Text>
             <Text style={styles.statLabel}>Followers</Text>
           </TouchableOpacity>
-        </View>
-      </View>
+        </View></>}
+      />
 
       <View style={styles.tabBar}>
         {(['posts', 'replies', 'reposts'] as const).map((tab) => (
@@ -241,7 +223,7 @@ export const UserProfileScreen = () => {
               onPress={() => navigation.navigate('Settings')}
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             >
-              <Ionicons name="settings-outline" size={22} color={darkTheme.fg} />
+              <Ionicons name="settings-outline" size={22} color={colors.fg} />
             </TouchableOpacity>
           ) : undefined
         }
@@ -297,55 +279,26 @@ export const UserProfileScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: colors.bg,
   },
   profileHeader: {
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
-  },
-  coverWrapper: {
-    width: '100%',
-    height: 120,
-    backgroundColor: darkTheme.surface,
-  },
-  coverImage: {
-    width: '100%',
-    height: '100%',
-  },
-  coverPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-  },
-  avatarRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    paddingHorizontal: 16,
-    marginTop: -40,
-  },
-  avatarWrapper: {
-    padding: 3,
-    backgroundColor: darkTheme.bg,
-    borderRadius: 45,
+    borderBottomColor: colors.border,
   },
   editBtn: {
     borderWidth: 1,
-    borderColor: darkTheme.borderStrong,
+    borderColor: colors.borderStrong,
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
+    paddingHorizontal: metrics.gutter,
+    paddingVertical: 13,
+    flex: 1,
+    alignItems: 'center',
   },
   editBtnText: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -355,26 +308,30 @@ const styles = StyleSheet.create({
   },
   messageBtn: {
     borderWidth: 1,
-    borderColor: darkTheme.borderStrong,
+    borderColor: colors.borderStrong,
     borderRadius: 20,
     paddingHorizontal: 14,
-    paddingVertical: 7,
+    paddingVertical: 13,
+    flex: 1,
+    alignItems: 'center',
   },
   messageBtnText: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     fontWeight: '600',
   },
   followBtn: {
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 7,
+    paddingHorizontal: metrics.gutter,
+    paddingVertical: 13,
+    flex: 1,
+    alignItems: 'center',
   },
   followingBtn: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: darkTheme.borderStrong,
+    borderColor: colors.borderStrong,
   },
   followBtnText: {
     color: '#ffffff',
@@ -382,27 +339,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   followingBtnText: {
-    color: darkTheme.fg,
-  },
-  infoSection: {
-    paddingHorizontal: 16,
-    marginTop: 10,
-  },
-  usernameText: {
-    color: darkTheme.fg,
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  handleText: {
-    color: darkTheme.fgMuted,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  bioText: {
-    color: darkTheme.fg,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 10,
+    color: colors.fg,
   },
   statsRow: {
     flexDirection: 'row',
@@ -411,47 +348,52 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   statItem: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: 5,
+    flex: 1,
   },
   statNumber: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 24,
   },
   statLabel: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
   },
   tabBar: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 8,
+    backgroundColor: colors.bg,
   },
   tabItem: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: 'center',
     borderBottomWidth: 2,
     borderBottomColor: 'transparent',
+    borderRadius: 8,
   },
   tabItemActive: {
-    borderBottomColor: darkTheme.accent,
+    backgroundColor: colors.surface,
+    borderBottomColor: colors.accent,
   },
   tabText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     fontWeight: '600',
   },
   tabTextActive: {
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   emptyContainer: {
     paddingVertical: 40,
     alignItems: 'center',
   },
   emptyText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
   },
 });

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef, DarkTheme, DefaultTheme } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './src/query/queryClient';
@@ -17,7 +17,19 @@ import {
 export const navigationRef = createNavigationContainerRef<any>();
 
 function AppContent() {
-  const { resolvedThemeMode } = useTheme();
+  const { resolvedThemeMode, colors, isDark } = useTheme();
+  const navigationTheme = {
+    ...(isDark ? DarkTheme : DefaultTheme),
+    colors: {
+      ...(isDark ? DarkTheme.colors : DefaultTheme.colors),
+      primary: colors.accent,
+      background: colors.bg,
+      card: colors.surface,
+      text: colors.fg,
+      border: colors.border,
+      notification: colors.accent,
+    },
+  };
   const { isAuthenticated } = useAuthStore();
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
@@ -68,7 +80,7 @@ function AppContent() {
   }, []);
 
   return (
-    <NavigationContainer ref={navigationRef}>
+    <NavigationContainer ref={navigationRef} theme={navigationTheme}>
       <StatusBar style={resolvedThemeMode === 'dark' ? 'light' : 'dark'} />
       <RootNavigator />
     </NavigationContainer>

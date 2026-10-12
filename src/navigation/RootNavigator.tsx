@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../theme/ThemeContext';
 
 // Screens
@@ -32,6 +33,7 @@ const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
 
   return (
@@ -39,16 +41,18 @@ const TabNavigator = () => {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: colors.bg,
+          backgroundColor: colors.surface,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: Platform.OS === 'ios' ? 86 : 66,
-          paddingBottom: Platform.OS === 'ios' ? 26 : 10,
+          height: 62 + Math.max(insets.bottom, 10),
+          paddingBottom: Math.max(insets.bottom, 10),
           paddingTop: 10,
         },
         tabBarActiveTintColor: colors.accent,
         tabBarInactiveTintColor: colors.fgMuted,
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
+        tabBarHideOnKeyboard: true,
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', marginTop: 3 },
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
@@ -60,10 +64,11 @@ const TabNavigator = () => {
         name="FeedTab"
         component={FeedScreen}
         options={{
+          tabBarLabel: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'home' : 'home-outline'}
-              size={27}
+              size={23}
               color={color}
             />
           ),
@@ -73,10 +78,11 @@ const TabNavigator = () => {
         name="SearchTab"
         component={SearchScreen}
         options={{
+          tabBarLabel: 'Explore',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'search' : 'search-outline'}
-              size={27}
+              size={23}
               color={color}
             />
           ),
@@ -86,10 +92,11 @@ const TabNavigator = () => {
         name="NotificationsTab"
         component={NotificationsScreen}
         options={{
+          tabBarLabel: 'Activity',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'notifications' : 'notifications-outline'}
-              size={27}
+              size={23}
               color={color}
             />
           ),
@@ -99,10 +106,11 @@ const TabNavigator = () => {
         name="MessagesTab"
         component={ConversationsScreen}
         options={{
+          tabBarLabel: 'Messages',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'mail' : 'mail-outline'}
-              size={27}
+              size={23}
               color={color}
             />
           ),
@@ -112,10 +120,11 @@ const TabNavigator = () => {
         name="ProfileTab"
         component={ProfileScreen}
         options={{
+          tabBarLabel: 'You',
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? 'person' : 'person-outline'}
-              size={27}
+              size={23}
               color={color}
             />
           ),
@@ -136,7 +145,7 @@ export const RootNavigator = () => {
   if (isInitializing) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.bg }]}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.accentText} />
       </View>
     );
   }

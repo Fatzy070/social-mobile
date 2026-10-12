@@ -1,3 +1,4 @@
+import { ScreenIntro } from '../../components/common/ScreenIntro';
 import React, { useState } from 'react';
 import {
   View,
@@ -17,10 +18,13 @@ import { ConversationListSkeleton } from '../../components/common/Skeleton';
 import { useConversations } from './useMessages';
 import { useAuthStore } from '../../store/authStore';
 import { useTheme } from '../../theme/ThemeContext';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Conversation } from '../../types';
 
 export const ConversationsScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
   const { data, isLoading, isRefetching, refetch } = useConversations();
@@ -70,7 +74,7 @@ export const ConversationsScreen = () => {
             <Text style={styles.convTitle} numberOfLines={1}>
               {title}
             </Text>
-            {timeAgo ? <Text style={styles.convTime}>{timeAgo}</Text> : null}
+
           </View>
 
           <Text style={styles.convSnippet} numberOfLines={1}>
@@ -78,11 +82,14 @@ export const ConversationsScreen = () => {
           </Text>
         </View>
 
+        <View style={{ alignItems: 'flex-end', gap: 8, maxWidth: 80 }}>
+        {timeAgo ? <Text style={styles.convTime}>{timeAgo}</Text> : null}
         {(item.unreadCount || 0) > 0 && (
           <View style={styles.unreadBadge}>
             <Text style={styles.unreadText}>{item.unreadCount}</Text>
           </View>
         )}
+        </View>
       </TouchableOpacity>
     );
   };
@@ -99,7 +106,7 @@ export const ConversationsScreen = () => {
               hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               accessibilityLabel="Scheduled Messages"
             >
-              <Ionicons name="time-outline" size={20} color={darkTheme.fg} />
+              <Ionicons name="time-outline" size={20} color={colors.fg} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -118,12 +125,13 @@ export const ConversationsScreen = () => {
         <ConversationListSkeleton count={7} />
       ) : conversations.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Ionicons name="chatbubbles-outline" size={48} color={darkTheme.fgMuted} />
+          <Ionicons name="chatbubbles-outline" size={48} color={colors.fgMuted} />
           <Text style={styles.emptyTitle}>No conversations yet</Text>
           <Text style={styles.emptySubtitle}>Start a chat with someone you follow!</Text>
         </View>
       ) : (
         <FlatList
+          ListHeaderComponent={<ScreenIntro label="Messages" title="Keep talking." description="Your conversations, all together." />}
           data={conversations}
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
@@ -131,8 +139,8 @@ export const ConversationsScreen = () => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={darkTheme.accent}
-              colors={[darkTheme.accent]}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
             />
           }
           showsVerticalScrollIndicator={false}
@@ -142,10 +150,10 @@ export const ConversationsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -154,13 +162,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
     marginTop: 12,
   },
   emptySubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     textAlign: 'center',
     marginTop: 6,
@@ -174,9 +182,9 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -184,17 +192,17 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 17,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },
   convRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: metrics.gutter,
+    paddingVertical: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   convInfo: {
     flex: 1,
@@ -208,22 +216,22 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   convTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 16,
     fontWeight: '700',
     flex: 1,
     marginRight: 8,
   },
   convTime: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
   },
   convSnippet: {
-    color: darkTheme.fgMuted,
-    fontSize: 13,
+    color: colors.fgMuted,
+    fontSize: 14,
   },
   unreadBadge: {
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     borderRadius: 10,
     paddingHorizontal: 7,
     paddingVertical: 2,

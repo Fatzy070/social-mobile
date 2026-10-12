@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
@@ -42,10 +43,14 @@ import {
 } from './useMessages';
 import { useAuthStore } from '../../store/authStore';
 import { parseTextWithLinks } from '../../utils/urlHelper';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Message } from '../../types';
 
 export const ChatScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { user } = useAuthStore();
@@ -585,13 +590,13 @@ export const ChatScreen = () => {
           {/* Pinned Indicator */}
           {item.isPinned && (
             <View style={styles.pinnedBadge}>
-              <Ionicons name="pin" size={11} color={darkTheme.accent} />
+              <Ionicons name="pin" size={11} color={colors.accentText} />
               <Text style={styles.pinnedText}>Pinned</Text>
             </View>
           )}
 
           {item.messageType === 'voice' && item.audio?.url ? (
-            <VoicePlayer url={item.audio.url} duration={item.audio.duration} />
+            <VoicePlayer isOwn={isOwn} url={item.audio.url} duration={item.audio.duration} />
           ) : item.messageType === 'media' && item.media && item.media.length > 0 ? (
             <View>
               {item.media.map((file, idx) => {
@@ -617,7 +622,7 @@ export const ChatScreen = () => {
                       ]}
                     >
                       <View style={styles.docIconBox}>
-                        <Ionicons name="document-text" size={20} color={isOwn ? '#ffffff' : darkTheme.accent} />
+                        <Ionicons name="document-text" size={20} color={isOwn ? '#ffffff' : colors.accent} />
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text
@@ -626,14 +631,14 @@ export const ChatScreen = () => {
                         >
                           {file.fileName || 'Attached Document'}
                         </Text>
-                        <Text style={styles.docSub}>
+                        <Text style={[styles.docSub, { color: isOwn ? '#ffffff' : colors.fgMuted }]}>
                           {file.fileSize ? `${Math.round(file.fileSize / 1024)} KB • ` : ''}Tap to view
                         </Text>
                       </View>
                       <Ionicons
                         name="eye-outline"
                         size={18}
-                        color={isOwn ? 'rgba(255,255,255,0.7)' : darkTheme.fgMuted}
+                        color={isOwn ? 'rgba(255,255,255,0.7)' : colors.fgMuted}
                       />
                     </TouchableOpacity>
                   );
@@ -667,11 +672,11 @@ export const ChatScreen = () => {
 
           <View style={styles.timeRow}>
             {item.isEdited && (
-              <Text style={[styles.timestamp, { marginRight: 4, fontStyle: 'italic' }]}>
+              <Text style={[styles.timestamp, { marginRight: 4, fontStyle: 'italic', color: isOwn ? '#ffffff' : colors.fgMuted }]}>
                 edited
               </Text>
             )}
-            <Text style={styles.timestamp}>
+            <Text style={[styles.timestamp, { color: isOwn ? '#ffffff' : colors.fgMuted }]}>
               {item.createdAt
                 ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 : ''}
@@ -680,7 +685,7 @@ export const ChatScreen = () => {
               <Ionicons
                 name={item.status === 'read' ? 'checkmark-done' : 'checkmark'}
                 size={14}
-                color={item.status === 'read' ? darkTheme.accentHover : 'rgba(255,255,255,0.6)'}
+                color={item.status === 'read' ? colors.accentHover : 'rgba(255,255,255,0.6)'}
                 style={{ marginLeft: 3 }}
               />
             )}
@@ -710,7 +715,7 @@ export const ChatScreen = () => {
             onPress={handleHeaderPress}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
-            <Ionicons name="information-circle-outline" size={24} color={darkTheme.fg} />
+            <Ionicons name="information-circle-outline" size={24} color={colors.fg} />
           </TouchableOpacity>
         }
       />
@@ -733,7 +738,7 @@ export const ChatScreen = () => {
           onPress={() => scrollToMessage(topPinnedMessage._id)}
         >
           <View style={styles.pinnedAccentBar} />
-          <Ionicons name="pin" size={16} color={darkTheme.accent} style={{ marginRight: 8 }} />
+          <Ionicons name="pin" size={16} color={colors.accentText} style={{ marginRight: 8 }} />
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
               <Text style={styles.pinnedBannerSender}>
@@ -749,7 +754,7 @@ export const ChatScreen = () => {
               {topPinnedMessage.text || (topPinnedMessage.messageType === 'voice' ? '🎤 Voice note' : '📷 Attachment')}
             </Text>
           </View>
-          <Ionicons name="chevron-forward" size={16} color={darkTheme.fgMuted} />
+          <Ionicons name="chevron-forward" size={16} color={colors.fgMuted} />
         </TouchableOpacity>
       )}
 
@@ -795,7 +800,7 @@ export const ChatScreen = () => {
           <Ionicons
             name={editingMessage ? 'pencil' : 'arrow-undo'}
             size={18}
-            color={darkTheme.accent}
+            color={colors.accentText}
           />
           <View style={{ flex: 1, marginLeft: 8 }}>
             <Text style={styles.stateBannerTitle}>
@@ -812,16 +817,16 @@ export const ChatScreen = () => {
               setText('');
             }}
           >
-            <Ionicons name="close" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="close" size={18} color={colors.fgMuted} />
           </TouchableOpacity>
         </View>
       )}
 
       {/* Input Bar or Voice Recorder */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(insets.bottom, 8) }]}>
         {isMessagingLocked ? (
           <View style={styles.lockedBar}>
-            <Ionicons name="lock-closed" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="lock-closed" size={18} color={colors.fgMuted} />
             <Text style={styles.lockedText}>Only group admins can send messages</Text>
           </View>
         ) : isRecordingMode ? (
@@ -837,20 +842,20 @@ export const ChatScreen = () => {
               style={styles.attachBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Ionicons name="add" size={24} color={darkTheme.fgMuted} />
+              <Ionicons name="add" size={24} color={colors.fgMuted} />
             </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => setIsRecordingMode(true)}
               style={styles.attachBtn}
             >
-              <Ionicons name="mic-outline" size={22} color={darkTheme.fgMuted} />
+              <Ionicons name="mic-outline" size={22} color={colors.fgMuted} />
             </TouchableOpacity>
 
             <TextInput
               style={styles.textInput}
               placeholder={isGroup ? 'Type a message or @mention...' : 'Type a message...'}
-              placeholderTextColor={darkTheme.fgMuted}
+              placeholderTextColor={colors.fgMuted}
               value={text}
               onChangeText={handleTextChange}
               multiline
@@ -914,26 +919,26 @@ export const ChatScreen = () => {
           onPress={() => setIsActionModalOpen(false)}
           style={styles.modalBackdrop}
         >
-          <View style={styles.actionModalSheet}>
+          <View style={[styles.actionModalSheet, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
             <View style={styles.sheetHandle} />
 
             {/* Reply */}
             <TouchableOpacity style={styles.sheetAction} onPress={handleReplyAction}>
-              <Ionicons name="arrow-undo-outline" size={20} color={darkTheme.accent} />
+              <Ionicons name="arrow-undo-outline" size={20} color={colors.accentText} />
               <Text style={styles.sheetActionText}>Reply</Text>
             </TouchableOpacity>
 
             {/* Copy Text */}
             {selectedMessage?.text ? (
               <TouchableOpacity style={styles.sheetAction} onPress={handleCopyAction}>
-                <Ionicons name="copy-outline" size={20} color={darkTheme.fg} />
+                <Ionicons name="copy-outline" size={20} color={colors.fg} />
                 <Text style={styles.sheetActionText}>Copy Text</Text>
               </TouchableOpacity>
             ) : null}
 
             {/* Forward Message */}
             <TouchableOpacity style={styles.sheetAction} onPress={handleForwardAction}>
-              <Ionicons name="share-social-outline" size={20} color={darkTheme.success} />
+              <Ionicons name="share-social-outline" size={20} color={colors.success} />
               <Text style={styles.sheetActionText}>Forward Message</Text>
             </TouchableOpacity>
 
@@ -942,7 +947,7 @@ export const ChatScreen = () => {
               <Ionicons
                 name={selectedMessage?.isPinned ? 'pin' : 'pin-outline'}
                 size={20}
-                color={selectedMessage?.isPinned ? darkTheme.bookmark : darkTheme.fg}
+                color={selectedMessage?.isPinned ? colors.bookmark : colors.fg}
               />
               <Text style={styles.sheetActionText}>
                 {selectedMessage?.isPinned ? 'Unpin Message' : 'Pin Message'}
@@ -960,11 +965,11 @@ export const ChatScreen = () => {
             {/* Delete Message (Own message only) */}
             {selectedMessage?.sender?._id === user?._id && (
               <TouchableOpacity
-                style={[styles.sheetAction, { borderTopWidth: 1, borderTopColor: darkTheme.border }]}
+                style={[styles.sheetAction, { borderTopWidth: 1, borderTopColor: colors.border }]}
                 onPress={handleDeleteAction}
               >
-                <Ionicons name="trash-outline" size={20} color={darkTheme.error} />
-                <Text style={[styles.sheetActionText, { color: darkTheme.error }]}>
+                <Ionicons name="trash-outline" size={20} color={colors.error} />
+                <Text style={[styles.sheetActionText, { color: colors.error }]}>
                   Delete Message
                 </Text>
               </TouchableOpacity>
@@ -992,10 +997,10 @@ export const ChatScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -1003,12 +1008,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   messagesList: {
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 24,
   },
   messageRow: {
     flexDirection: 'row',
-    marginVertical: 4,
+    marginVertical: 6,
     alignItems: 'flex-end',
     gap: 6,
   },
@@ -1019,22 +1024,22 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   bubble: {
-    maxWidth: '78%',
+    maxWidth: '84%',
     paddingHorizontal: 14,
     paddingTop: 10,
     paddingBottom: 6,
-    borderRadius: 18,
+    borderRadius: 20,
   },
   bubbleHighlighted: {
     borderWidth: 2,
-    borderColor: darkTheme.accent,
+    borderColor: colors.accent,
   },
   bubbleOwn: {
-    backgroundColor: darkTheme.bubbleOwn,
+    backgroundColor: colors.bubbleOwn,
     borderBottomRightRadius: 4,
   },
   bubbleOther: {
-    backgroundColor: darkTheme.bubbleOther,
+    backgroundColor: colors.bubbleOther,
     borderBottomLeftRadius: 4,
   },
   disappearingBanner: {
@@ -1056,35 +1061,35 @@ const styles = StyleSheet.create({
   pinnedBannerContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.surface,
-    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   pinnedAccentBar: {
     width: 3,
     height: '100%',
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     borderRadius: 2,
     marginRight: 10,
   },
   pinnedBannerSender: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 12,
     fontWeight: '700',
   },
   pinnedBannerCount: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 11,
   },
   pinnedBannerText: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     marginTop: 2,
   },
   senderName: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 11,
     fontWeight: '700',
     marginBottom: 4,
@@ -1098,12 +1103,12 @@ const styles = StyleSheet.create({
   },
   replyAccentLine: {
     width: 3,
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     borderRadius: 2,
     marginRight: 8,
   },
   replySenderName: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 11,
     fontWeight: '700',
   },
@@ -1118,19 +1123,19 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   pinnedText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 10,
     fontWeight: '700',
   },
   messageText: {
-    fontSize: 15,
-    lineHeight: 20,
+    fontSize: metrics.body,
+    lineHeight: 24,
   },
   textOwn: {
     color: '#ffffff',
   },
   textOther: {
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   linkText: {
     textDecorationLine: 'underline',
@@ -1140,7 +1145,7 @@ const styles = StyleSheet.create({
     color: '#ffffff',
   },
   linkTextOther: {
-    color: darkTheme.accent,
+    color: colors.accentText,
   },
   mediaImage: {
     width: 210,
@@ -1162,9 +1167,9 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   docCardOther: {
-    backgroundColor: darkTheme.surfaceSubtle,
+    backgroundColor: colors.surfaceSubtle,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
   },
   docIconBox: {
     width: 36,
@@ -1194,9 +1199,9 @@ const styles = StyleSheet.create({
     color: 'rgba(255,255,255,0.6)',
   },
   mentionBox: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
+    borderTopColor: colors.border,
     maxHeight: 140,
     paddingHorizontal: 12,
   },
@@ -1206,37 +1211,37 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 8,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   mentionName: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 13,
     fontWeight: '600',
   },
   stateBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
-    paddingHorizontal: 16,
+    borderTopColor: colors.border,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 8,
   },
   stateBannerTitle: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 12,
     fontWeight: '700',
   },
   stateBannerSubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
   },
   bottomBar: {
     borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
+    borderTopColor: colors.border,
     paddingHorizontal: 20,
     paddingVertical: 8,
-    backgroundColor: darkTheme.surfaceSubtle,
+    backgroundColor: colors.surfaceSubtle,
   },
   lockedBar: {
     flexDirection: 'row',
@@ -1246,7 +1251,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   lockedText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     fontWeight: '600',
   },
@@ -1256,20 +1261,20 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   attachBtn: {
-    padding: 6,
+    padding: 10,
   },
   textInput: {
     flex: 1,
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     maxHeight: 90,
     paddingHorizontal: 10,
   },
   sendBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: darkTheme.accent,
+    width: 44,
+    height: 44,
+    borderRadius: 20,
+    backgroundColor: colors.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -1282,18 +1287,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   actionModalSheet: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     paddingTop: 10,
     paddingBottom: 34,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
   },
   sheetHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: darkTheme.borderStrong,
+    backgroundColor: colors.borderStrong,
     alignSelf: 'center',
     marginBottom: 14,
   },
@@ -1304,8 +1309,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   sheetActionText: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
 });

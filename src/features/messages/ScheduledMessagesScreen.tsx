@@ -15,11 +15,14 @@ import { format } from 'date-fns';
 import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
 import { useScheduledMessages, useDeleteScheduledMessage } from './useMessages';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { CardRowSkeleton } from '../../components/common/Skeleton';
 import { ScheduledMessage } from '../../types';
 
 export const ScheduledMessagesScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { data: scheduledMessages = [], isLoading, isRefetching, refetch } = useScheduledMessages();
   const deleteScheduledMutation = useDeleteScheduledMessage();
@@ -93,7 +96,7 @@ export const ScheduledMessagesScreen = () => {
                 {isGroup ? targetTitle : otherUser?.username || 'User'}
               </Text>
               <View style={styles.timeBadge}>
-                <Ionicons name="time-outline" size={12} color={darkTheme.bookmark} />
+                <Ionicons name="time-outline" size={12} color={colors.bookmark} />
                 <Text style={styles.timeText}>{formattedDate}</Text>
               </View>
             </View>
@@ -106,9 +109,9 @@ export const ScheduledMessagesScreen = () => {
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             {isDeleting ? (
-              <ActivityIndicator size="small" color={darkTheme.error} />
+              <ActivityIndicator size="small" color={colors.error} />
             ) : (
-              <Ionicons name="trash-outline" size={18} color={darkTheme.error} />
+              <Ionicons name="trash-outline" size={18} color={colors.error} />
             )}
           </TouchableOpacity>
         </View>
@@ -134,7 +137,7 @@ export const ScheduledMessagesScreen = () => {
             onPress={() => handleOpenChat(item)}
           >
             <Text style={styles.openChatText}>Open Chat</Text>
-            <Ionicons name="chevron-forward" size={14} color={darkTheme.accent} />
+            <Ionicons name="chevron-forward" size={14} color={colors.accentText} />
           </TouchableOpacity>
         </View>
       </View>
@@ -153,7 +156,7 @@ export const ScheduledMessagesScreen = () => {
       ) : scheduledMessages.length === 0 ? (
         <View style={styles.centerContainer}>
           <View style={styles.emptyIconCircle}>
-            <Ionicons name="time-outline" size={36} color={darkTheme.accent} />
+            <Ionicons name="time-outline" size={36} color={colors.accentText} />
           </View>
           <Text style={styles.emptyTitle}>No Scheduled Messages</Text>
           <Text style={styles.emptySubtitle}>
@@ -170,8 +173,8 @@ export const ScheduledMessagesScreen = () => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={darkTheme.accent}
-              colors={[darkTheme.accent]}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
             />
           }
           showsVerticalScrollIndicator={false}
@@ -181,10 +184,10 @@ export const ScheduledMessagesScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -196,19 +199,19 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: 'rgba(99, 102, 241, 0.12)',
+    backgroundColor: colors.accentMuted,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 16,
   },
   emptyTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
     marginBottom: 8,
   },
   emptySubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     textAlign: 'center',
     lineHeight: 20,
@@ -218,10 +221,10 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   card: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     padding: 14,
     gap: 12,
   },
@@ -236,8 +239,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   targetName: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '700',
   },
   timeBadge: {
@@ -247,7 +250,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   timeText: {
-    color: darkTheme.bookmark,
+    color: colors.bookmark,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -257,14 +260,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   messageBox: {
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     padding: 12,
   },
   messageText: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -287,10 +290,10 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: darkTheme.bookmark,
+    backgroundColor: colors.bookmark,
   },
   statusText: {
-    color: darkTheme.bookmark,
+    color: colors.bookmark,
     fontSize: 11,
     fontWeight: '600',
   },
@@ -300,7 +303,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   openChatText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 12,
     fontWeight: '600',
   },

@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Dimensions,
   Linking,
   ScrollView,
   Modal,
@@ -23,16 +22,18 @@ import { ImageViewerModal } from '../../components/common/ImageViewerModal';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
 import { useAuthStore } from '../../store/authStore';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Skeleton, SkeletonAvatar } from '../../components/common/Skeleton';
 import { Conversation, Message, User } from '../../types';
 
-const { width } = Dimensions.get('window');
 
 type TabType = 'media' | 'files' | 'links' | 'voice' | 'pinned';
 const DISAPPEARING_OPTIONS: Array<'off' | '24h' | '7d' | '30d'> = ['off', '24h', '7d', '30d'];
 
 export const ChatDetailsScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
   const { user: currentUser } = useAuthStore();
@@ -189,7 +190,7 @@ export const ChatDetailsScreen = () => {
                 onPress={() => navigation.navigate('UserProfile', { userId: otherUser._id })}
               >
                 <Text style={styles.viewProfileText}>View Public Profile</Text>
-                <Ionicons name="open-outline" size={14} color={darkTheme.fg} />
+                <Ionicons name="open-outline" size={14} color={colors.fg} />
               </TouchableOpacity>
             )}
           </View>
@@ -200,7 +201,7 @@ export const ChatDetailsScreen = () => {
             onPress={() => setIsDisappearingModalOpen(true)}
           >
             <View style={styles.actionRowIcon}>
-              <Ionicons name="time-outline" size={20} color={darkTheme.accent} />
+              <Ionicons name="time-outline" size={20} color={colors.accentText} />
             </View>
             <View style={{ flex: 1 }}>
               <Text style={styles.actionRowTitle}>Disappearing Messages</Text>
@@ -208,7 +209,7 @@ export const ChatDetailsScreen = () => {
                 {currentDuration === 'off' ? 'Off' : `Disappear after ${currentDuration}`}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="chevron-forward" size={18} color={colors.fgMuted} />
           </TouchableOpacity>
 
           {/* Tab Navigation for Shared Assets */}
@@ -221,7 +222,7 @@ export const ChatDetailsScreen = () => {
                 <Ionicons
                   name="images-outline"
                   size={14}
-                  color={activeTab === 'media' ? darkTheme.accent : darkTheme.fgMuted}
+                  color={activeTab === 'media' ? colors.accent : colors.fgMuted}
                 />
                 <Text style={[styles.tabLabel, activeTab === 'media' && styles.tabLabelActive]}>
                   Media ({mediaList.length})
@@ -235,7 +236,7 @@ export const ChatDetailsScreen = () => {
                 <Ionicons
                   name="document-text-outline"
                   size={14}
-                  color={activeTab === 'files' ? darkTheme.accent : darkTheme.fgMuted}
+                  color={activeTab === 'files' ? colors.accent : colors.fgMuted}
                 />
                 <Text style={[styles.tabLabel, activeTab === 'files' && styles.tabLabelActive]}>
                   Files ({fileList.length})
@@ -249,7 +250,7 @@ export const ChatDetailsScreen = () => {
                 <Ionicons
                   name="link-outline"
                   size={14}
-                  color={activeTab === 'links' ? darkTheme.accent : darkTheme.fgMuted}
+                  color={activeTab === 'links' ? colors.accent : colors.fgMuted}
                 />
                 <Text style={[styles.tabLabel, activeTab === 'links' && styles.tabLabelActive]}>
                   Links ({linkList.length})
@@ -263,7 +264,7 @@ export const ChatDetailsScreen = () => {
                 <Ionicons
                   name="mic-outline"
                   size={14}
-                  color={activeTab === 'voice' ? darkTheme.accent : darkTheme.fgMuted}
+                  color={activeTab === 'voice' ? colors.accent : colors.fgMuted}
                 />
                 <Text style={[styles.tabLabel, activeTab === 'voice' && styles.tabLabelActive]}>
                   Voice ({voiceList.length})
@@ -277,7 +278,7 @@ export const ChatDetailsScreen = () => {
                 <Ionicons
                   name="bookmark-outline"
                   size={14}
-                  color={activeTab === 'pinned' ? darkTheme.accent : darkTheme.fgMuted}
+                  color={activeTab === 'pinned' ? colors.accent : colors.fgMuted}
                 />
                 <Text style={[styles.tabLabel, activeTab === 'pinned' && styles.tabLabelActive]}>
                   Pinned ({pinnedMessages.length})
@@ -289,7 +290,7 @@ export const ChatDetailsScreen = () => {
           {/* Tab Content Display */}
           <View style={styles.tabContentArea}>
             {mediaLoading ? (
-              <ActivityIndicator size="small" color={darkTheme.accent} style={{ marginVertical: 20 }} />
+              <ActivityIndicator size="small" color={colors.accentText} style={{ marginVertical: 20 }} />
             ) : activeTab === 'media' ? (
               mediaList.length === 0 ? (
                 <Text style={styles.emptyTabNote}>No photos or videos shared yet</Text>
@@ -316,7 +317,7 @@ export const ChatDetailsScreen = () => {
                     onPress={() => Linking.openURL(f.url)}
                     style={styles.fileItem}
                   >
-                    <Ionicons name="document-outline" size={24} color={darkTheme.success} />
+                    <Ionicons name="document-outline" size={24} color={colors.success} />
                     <View style={{ flex: 1 }}>
                       <Text style={styles.fileName} numberOfLines={1}>
                         {f.fileName || 'Attachment'}
@@ -325,7 +326,7 @@ export const ChatDetailsScreen = () => {
                         <Text style={styles.fileSize}>{(f.fileSize / 1024).toFixed(1)} KB</Text>
                       ) : null}
                     </View>
-                    <Ionicons name="download-outline" size={20} color={darkTheme.fgMuted} />
+                    <Ionicons name="download-outline" size={20} color={colors.fgMuted} />
                   </TouchableOpacity>
                 ))
               )
@@ -339,11 +340,11 @@ export const ChatDetailsScreen = () => {
                     onPress={() => Linking.openURL(l.url)}
                     style={styles.linkItem}
                   >
-                    <Ionicons name="globe-outline" size={20} color={darkTheme.accent} />
+                    <Ionicons name="globe-outline" size={20} color={colors.accentText} />
                     <Text style={styles.linkText} numberOfLines={1}>
                       {l.url}
                     </Text>
-                    <Ionicons name="open-outline" size={16} color={darkTheme.fgMuted} />
+                    <Ionicons name="open-outline" size={16} color={colors.fgMuted} />
                   </TouchableOpacity>
                 ))
               )
@@ -364,7 +365,7 @@ export const ChatDetailsScreen = () => {
                 pinnedMessages.map((p) => (
                   <View key={p._id} style={styles.pinnedItem}>
                     <View style={styles.pinnedHeader}>
-                      <Ionicons name="bookmark" size={14} color={darkTheme.bookmark} />
+                      <Ionicons name="bookmark" size={14} color={colors.bookmark} />
                       <Text style={styles.pinnedSender}>{p.sender?.username || 'User'}</Text>
                       <Text style={styles.pinnedDate}>
                         {p.createdAt ? format(new Date(p.createdAt), 'MMM d, h:mm a') : ''}
@@ -391,15 +392,15 @@ export const ChatDetailsScreen = () => {
                 ]}
               >
                 {blockMutation.isPending ? (
-                  <ActivityIndicator size="small" color={isBlocked ? darkTheme.fg : darkTheme.error} />
+                  <ActivityIndicator size="small" color={isBlocked ? colors.fg : colors.error} />
                 ) : (
                   <>
                     <Ionicons
                       name="ban-outline"
                       size={18}
-                      color={isBlocked ? darkTheme.fg : darkTheme.error}
+                      color={isBlocked ? colors.fg : colors.error}
                     />
-                    <Text style={[styles.blockBtnText, isBlocked && { color: darkTheme.fg }]}>
+                    <Text style={[styles.blockBtnText, isBlocked && { color: colors.fg }]}>
                       {isBlocked ? `Unblock @${otherUser.username}` : `Block @${otherUser.username}`}
                     </Text>
                   </>
@@ -448,7 +449,7 @@ export const ChatDetailsScreen = () => {
                   {dur === 'off' ? 'Off' : dur}
                 </Text>
                 {currentDuration === dur && (
-                  <Ionicons name="checkmark" size={20} color={darkTheme.accent} />
+                  <Ionicons name="checkmark" size={20} color={colors.accentText} />
                 )}
               </TouchableOpacity>
             ))}
@@ -459,10 +460,10 @@ export const ChatDetailsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -475,20 +476,20 @@ const styles = StyleSheet.create({
   profileSection: {
     alignItems: 'center',
     paddingVertical: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
-    backgroundColor: 'rgba(28, 28, 32, 0.4)',
+    borderBottomColor: colors.border,
+    backgroundColor: colors.surface,
   },
   userName: {
-    fontSize: 18,
+    fontSize: metrics.title,
     fontWeight: '700',
-    color: darkTheme.fg,
+    color: colors.fg,
     marginTop: 12,
   },
   userHandle: {
     fontSize: 13,
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     marginTop: 2,
   },
   viewProfileBtn: {
@@ -496,46 +497,46 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginTop: 14,
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: darkTheme.border,
-    paddingHorizontal: 16,
+    borderColor: colors.border,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 8,
     borderRadius: 20,
   },
   viewProfileText: {
     fontSize: 12,
     fontWeight: '600',
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   actionRowBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.surface,
-    paddingHorizontal: 16,
+    backgroundColor: colors.surface,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
-    borderRadius: 14,
+    borderRadius: metrics.radius,
     marginHorizontal: 16,
     marginVertical: 16,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     gap: 12,
   },
   actionRowIcon: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    backgroundColor: colors.accentMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
   actionRowTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '700',
   },
   actionRowSubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -545,19 +546,19 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 20,
     paddingBottom: 36,
   },
   modalTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
   },
   modalSub: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     marginTop: 4,
     marginBottom: 16,
@@ -569,16 +570,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   disappearingLabel: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '600',
   },
   tabBar: {
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   tabScroll: {
     paddingHorizontal: 12,
@@ -594,15 +595,15 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   tabItemActive: {
-    borderBottomColor: darkTheme.accent,
+    borderBottomColor: colors.accent,
   },
   tabLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
   },
   tabLabelActive: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontWeight: '700',
   },
   tabContentArea: {
@@ -611,7 +612,7 @@ const styles = StyleSheet.create({
   },
   emptyTabNote: {
     textAlign: 'center',
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
     paddingVertical: 24,
   },
@@ -621,11 +622,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   mediaThumbContainer: {
-    width: (width - 48) / 3,
-    height: (width - 48) / 3,
+    width: '31%',
+    aspectRatio: 1,
     borderRadius: 12,
     overflow: 'hidden',
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
   },
   mediaThumb: {
     width: '100%',
@@ -636,20 +637,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 12,
-    backgroundColor: darkTheme.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     marginBottom: 8,
   },
   fileName: {
     fontSize: 13,
     fontWeight: '600',
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   fileSize: {
     fontSize: 11,
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     marginTop: 2,
   },
   linkItem: {
@@ -657,26 +658,26 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 10,
     padding: 12,
-    backgroundColor: darkTheme.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     marginBottom: 8,
   },
   linkText: {
     flex: 1,
     fontSize: 13,
-    color: darkTheme.accent,
+    color: colors.accentText,
   },
   voiceItem: {
     marginBottom: 10,
   },
   pinnedItem: {
     padding: 12,
-    backgroundColor: darkTheme.surface,
-    borderRadius: 14,
+    backgroundColor: colors.surface,
+    borderRadius: metrics.radius,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     marginBottom: 8,
   },
   pinnedHeader: {
@@ -688,16 +689,16 @@ const styles = StyleSheet.create({
   pinnedSender: {
     fontSize: 12,
     fontWeight: '700',
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   pinnedDate: {
     fontSize: 10,
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     marginLeft: 'auto',
   },
   pinnedContent: {
     fontSize: 12,
-    color: darkTheme.fg,
+    color: colors.fg,
   },
   actionSection: {
     padding: 16,
@@ -717,12 +718,12 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(239, 68, 68, 0.3)',
   },
   unblockBtn: {
-    backgroundColor: darkTheme.surface,
-    borderColor: darkTheme.border,
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
   },
   blockBtnText: {
     fontSize: 13,
     fontWeight: '700',
-    color: darkTheme.error,
+    color: colors.error,
   },
 });

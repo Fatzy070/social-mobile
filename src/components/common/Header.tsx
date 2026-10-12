@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
       style={[
         styles.container,
         {
-          backgroundColor: colors.bg,
+          backgroundColor: colors.surface,
           borderBottomColor: colors.border,
           paddingTop: insets.top + 8,
         },
@@ -45,30 +45,32 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Left Section: Back Button or Interactive Brand/Menu Logo */}
         {onBack ? (
           <TouchableOpacity
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
             onPress={onBack}
             style={[styles.backButton, { backgroundColor: colors.surface }]}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
           >
             <Ionicons name="arrow-back" size={22} color={colors.fg} />
           </TouchableOpacity>
-        ) : (
+        ) : onBrandPress ? (
           <TouchableOpacity
             activeOpacity={0.75}
+            accessibilityLabel="Open navigation"
             onPress={onBrandPress}
             disabled={!onBrandPress}
             style={styles.brandTrigger}
             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
-            <View style={[styles.logoBadge, { backgroundColor: colors.accent, shadowColor: colors.accent }]}>
-              <Text style={styles.logoText}>N</Text>
-            </View>
+            <Ionicons name="menu-outline" size={24} color={colors.fg} />
           </TouchableOpacity>
-        )}
+        ) : null}
 
         {/* Center Section */}
         {isBrandHeader ? (
           <TouchableOpacity
             activeOpacity={onBrandPress ? 0.75 : 1}
+            accessibilityLabel="Open navigation"
             onPress={onBrandPress}
             disabled={!onBrandPress}
             style={styles.brandTitleContainer}
@@ -110,9 +112,9 @@ export const Header: React.FC<HeaderProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderBottomWidth: 1,
+    borderBottomWidth: 0,
     paddingBottom: 10,
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     zIndex: 20,
   },
   content: {
@@ -122,7 +124,7 @@ const styles = StyleSheet.create({
     minHeight: 42,
   },
   backButton: {
-    padding: 6,
+    padding: 10,
     marginRight: 8,
     borderRadius: 20,
   },
@@ -137,9 +139,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0,
     shadowRadius: 5,
-    elevation: 4,
+    elevation: 0,
   },
   logoText: {
     color: '#ffffff',
@@ -149,11 +151,11 @@ const styles = StyleSheet.create({
   },
   brandTitleContainer: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
   },
   brandTitle: {
-    fontSize: 21,
+    fontSize: 27,
     fontWeight: '900',
     letterSpacing: -0.5,
   },

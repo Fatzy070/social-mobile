@@ -4,7 +4,7 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
+  useWindowDimensions,
   StatusBar,
   Text,
   ActivityIndicator,
@@ -24,7 +24,7 @@ interface ImageViewerModalProps {
   onClose: () => void;
 }
 
-const { width, height } = Dimensions.get('window');
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   visible,
@@ -32,6 +32,8 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
   initialIndex = 0,
   onClose,
 }) => {
+  const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [downloading, setDownloading] = useState(false);
 
@@ -102,8 +104,9 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <StatusBar barStyle="light-content" backgroundColor="#000000" />
       <View style={styles.backdrop}>
-        <View style={styles.topBar}>
-          <TouchableOpacity onPress={onClose} style={styles.iconButton}>
+        <View style={[styles.topBar, { top: insets.top + 12 }]}>
+          <TouchableOpacity accessibilityLabel="Close image viewer"
+              onPress={onClose} style={styles.iconButton}>
             <Ionicons name="close" size={24} color="#ffffff" />
           </TouchableOpacity>
 
@@ -112,7 +115,8 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           </Text>
 
           <TouchableOpacity
-            onPress={handleDownload}
+            accessibilityLabel="Save image"
+              onPress={handleDownload}
             style={styles.iconButton}
             disabled={downloading}
             hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
@@ -125,7 +129,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
           </TouchableOpacity>
         </View>
 
-        <View style={styles.imageWrapper}>
+        <View style={[styles.imageWrapper, { width, height: height * 0.8 }]}>
           <Image
             source={{ uri: currentImageUri }}
             style={styles.fullImage}
@@ -135,7 +139,7 @@ export const ImageViewerModal: React.FC<ImageViewerModalProps> = ({
         </View>
 
         {images.length > 1 && (
-          <View style={styles.navBar}>
+          <View style={[styles.navBar, { bottom: insets.bottom + 24 }]}>
             <TouchableOpacity
               disabled={currentIndex === 0}
               onPress={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
@@ -167,7 +171,7 @@ const styles = StyleSheet.create({
   },
   topBar: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 50 : 25,
+
     left: 16,
     right: 16,
     zIndex: 50,
@@ -183,14 +187,13 @@ const styles = StyleSheet.create({
   iconButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
     borderRadius: 20,
-    width: 38,
-    height: 38,
+    width: 44,
+    height: 44,
     justifyContent: 'center',
     alignItems: 'center',
   },
   imageWrapper: {
-    width,
-    height: height * 0.8,
+
     justifyContent: 'center',
     alignItems: 'center',
   },

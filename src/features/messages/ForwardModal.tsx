@@ -1,3 +1,4 @@
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState } from 'react';
 import {
   View,
@@ -12,7 +13,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar } from '../../components/common/Avatar';
 import { useConversations } from './useMessages';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { Conversation, Message } from '../../types';
 
 interface ForwardModalProps {
@@ -32,6 +35,8 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
   onConfirmForward,
   isForwarding,
 }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const insets = useSafeAreaInsets();
   const [search, setSearch] = useState('');
   const [selectedConvIds, setSelectedConvIds] = useState<string[]>([]);
   const { data, isLoading } = useConversations();
@@ -67,7 +72,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
       onRequestClose={onClose}
     >
       <View style={styles.backdrop}>
-        <View style={styles.sheetContainer}>
+        <View style={[styles.sheetContainer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
           <View style={styles.sheetHandle} />
 
           <View style={styles.header}>
@@ -76,16 +81,16 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
               <Text style={styles.subtitle}>Select chats to send to</Text>
             </View>
             <TouchableOpacity onPress={onClose} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-              <Ionicons name="close" size={22} color={darkTheme.fgMuted} />
+              <Ionicons name="close" size={22} color={colors.fgMuted} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.searchBar}>
-            <Ionicons name="search" size={16} color={darkTheme.fgMuted} />
+            <Ionicons name="search" size={16} color={colors.fgMuted} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search conversations..."
-              placeholderTextColor={darkTheme.fgMuted}
+              placeholderTextColor={colors.fgMuted}
               value={search}
               onChangeText={setSearch}
             />
@@ -93,7 +98,7 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
 
           {isLoading ? (
             <View style={styles.centerContainer}>
-              <ActivityIndicator size="small" color={darkTheme.accent} />
+              <ActivityIndicator size="small" color={colors.accentText} />
             </View>
           ) : (
             <FlatList
@@ -163,28 +168,28 @@ export const ForwardModal: React.FC<ForwardModalProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'flex-end',
   },
   sheetContainer: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 10,
     paddingBottom: 32,
     maxHeight: '80%',
     borderTopWidth: 1,
-    borderTopColor: darkTheme.border,
+    borderTopColor: colors.border,
   },
   sheetHandle: {
     width: 36,
     height: 4,
     borderRadius: 2,
-    backgroundColor: darkTheme.borderStrong,
+    backgroundColor: colors.borderStrong,
     alignSelf: 'center',
     marginBottom: 12,
   },
@@ -194,33 +199,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   title: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 16,
     fontWeight: '700',
   },
   subtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 8,
     marginVertical: 12,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     gap: 8,
   },
   searchInput: {
     flex: 1,
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     padding: 0,
   },
@@ -233,18 +238,18 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   convInfo: {
     flex: 1,
   },
   convTitle: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
     fontWeight: '600',
   },
   convSubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -253,25 +258,25 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 11,
     borderWidth: 2,
-    borderColor: darkTheme.fgMuted,
+    borderColor: colors.fgMuted,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: darkTheme.accent,
-    borderColor: darkTheme.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
   centerContainer: {
     paddingVertical: 32,
     alignItems: 'center',
   },
   emptyText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 13,
   },
   sendBtn: {
-    backgroundColor: darkTheme.accent,
-    borderRadius: 14,
+    backgroundColor: colors.accent,
+    borderRadius: metrics.radius,
     paddingVertical: 14,
     alignItems: 'center',
     marginTop: 14,
@@ -286,7 +291,7 @@ const styles = StyleSheet.create({
   },
   sendBtnText: {
     color: '#ffffff',
-    fontSize: 15,
+    fontSize: metrics.body,
     fontWeight: '700',
   },
 });

@@ -1,3 +1,4 @@
+import { ScreenIntro } from '../../components/common/ScreenIntro';
 import React from 'react';
 import {
   View,
@@ -18,10 +19,13 @@ import { NotificationListSkeleton } from '../../components/common/Skeleton';
 import { useTheme } from '../../theme/ThemeContext';
 import { apiClient } from '../../api/client';
 import { queryKeys } from '../../query/queryKeys';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { NotificationItem } from '../../types';
 
 export const NotificationsScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
 
@@ -50,21 +54,21 @@ export const NotificationsScreen = () => {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'like':
-        return <Ionicons name="heart" size={18} color={darkTheme.like} />;
+        return <Ionicons name="heart" size={18} color={colors.like} />;
       case 'comment':
-        return <Ionicons name="chatbubble" size={18} color={darkTheme.accent} />;
+        return <Ionicons name="chatbubble" size={18} color={colors.accentText} />;
       case 'follow':
-        return <Ionicons name="person-add" size={18} color={darkTheme.success} />;
+        return <Ionicons name="person-add" size={18} color={colors.success} />;
       case 'bookmark':
-        return <Ionicons name="bookmark" size={18} color={darkTheme.bookmark} />;
+        return <Ionicons name="bookmark" size={18} color={colors.bookmark} />;
       case 'repost':
-        return <Ionicons name="repeat" size={18} color={darkTheme.success} />;
+        return <Ionicons name="repeat" size={18} color={colors.success} />;
       case 'quote':
-        return <Ionicons name="create" size={18} color={darkTheme.accentHover} />;
+        return <Ionicons name="create" size={18} color={colors.accentHover} />;
       case 'mention':
-        return <Ionicons name="at" size={18} color={darkTheme.accent} />;
+        return <Ionicons name="at" size={18} color={colors.accentText} />;
       default:
-        return <Ionicons name="notifications" size={18} color={darkTheme.accent} />;
+        return <Ionicons name="notifications" size={18} color={colors.accentText} />;
     }
   };
 
@@ -112,9 +116,10 @@ export const NotificationsScreen = () => {
         onPress={() => handleNotificationPress(item)}
         style={[styles.notifRow, !item.isRead && styles.notifUnread]}
       >
-        <View style={styles.iconContainer}>{getNotificationIcon(item.type)}</View>
-
-        <Avatar uri={item.sender?.avatar} name={item.sender?.username} size={40} />
+        <View style={{ position: 'relative' }}>
+          <Avatar uri={item.sender?.avatar} name={item.sender?.username} size={48} />
+          <View style={{ position: 'absolute', right: -5, bottom: -5, padding: 3, borderRadius: 12, backgroundColor: colors.surface }}>{getNotificationIcon(item.type)}</View>
+        </View>
 
         <View style={styles.notifContent}>
           <Text style={styles.notifMessage}>{getNotificationText(item)}</Text>
@@ -127,7 +132,7 @@ export const NotificationsScreen = () => {
   return (
     <View style={styles.container}>
       <Header
-        title="Notifications"
+        title="Activity"
         rightAction={
           notifications.some((n) => !n.isRead) ? (
             <TouchableOpacity
@@ -144,12 +149,13 @@ export const NotificationsScreen = () => {
         <NotificationListSkeleton count={7} />
       ) : notifications.length === 0 ? (
         <View style={styles.centerContainer}>
-          <Ionicons name="notifications-outline" size={48} color={darkTheme.fgMuted} />
+          <Ionicons name="notifications-outline" size={48} color={colors.fgMuted} />
           <Text style={styles.emptyTitle}>All Caught Up</Text>
           <Text style={styles.emptySubtitle}>No notifications to show right now.</Text>
         </View>
       ) : (
         <FlatList
+          ListHeaderComponent={<ScreenIntro label="Your connections" title="Around you." description="The replies, mentions, and moments you’re part of." />}
           data={notifications}
           keyExtractor={(item) => item._id}
           renderItem={renderItem}
@@ -157,8 +163,8 @@ export const NotificationsScreen = () => {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor={darkTheme.accent}
-              colors={[darkTheme.accent]}
+              tintColor={colors.accent}
+              colors={[colors.accent]}
             />
           }
           showsVerticalScrollIndicator={false}
@@ -168,10 +174,10 @@ export const NotificationsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   centerContainer: {
     flex: 1,
@@ -180,33 +186,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyTitle: {
-    color: darkTheme.fg,
-    fontSize: 18,
+    color: colors.fg,
+    fontSize: metrics.title,
     fontWeight: '700',
     marginTop: 12,
   },
   emptySubtitle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     textAlign: 'center',
     marginTop: 6,
   },
   markAllText: {
-    color: darkTheme.accent,
-    fontSize: 13,
+    color: colors.accentText,
+    fontSize: 14,
     fontWeight: '600',
   },
   notifRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    alignItems: 'flex-start',
+    paddingHorizontal: metrics.gutter,
+    paddingVertical: 20,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
     gap: 12,
   },
   notifUnread: {
-    backgroundColor: 'rgba(99, 102, 241, 0.08)',
+    backgroundColor: colors.accentMuted,
   },
   iconContainer: {
     width: 28,
@@ -216,12 +222,12 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   notifMessage: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
-    lineHeight: 18,
+    lineHeight: 22,
   },
   timeText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 4,
   },

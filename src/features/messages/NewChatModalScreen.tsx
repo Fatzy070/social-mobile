@@ -18,11 +18,14 @@ import { Header } from '../../components/common/Header';
 import { Avatar } from '../../components/common/Avatar';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../store/authStore';
-import { darkTheme } from '../../theme/colors';
+import type { Theme } from '../../theme/colors';
+import { useThemedStyles } from '../../theme/useThemedStyles';
+import { metrics } from '../../theme/metrics';
 import { queryKeys } from '../../query/queryKeys';
 import { User } from '../../types';
 
 export const NewChatModalScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigation = useNavigation<any>();
   const { user: currentUser } = useAuthStore();
   const queryClient = useQueryClient();
@@ -173,7 +176,7 @@ export const NewChatModalScreen = () => {
           <Ionicons
             name="person"
             size={16}
-            color={mode === 'direct' ? darkTheme.accent : darkTheme.fgMuted}
+            color={mode === 'direct' ? colors.accent : colors.fgMuted}
           />
           <Text style={[styles.modeTabText, mode === 'direct' && styles.modeTabTextActive]}>
             Direct Chat
@@ -187,7 +190,7 @@ export const NewChatModalScreen = () => {
           <Ionicons
             name="people"
             size={16}
-            color={mode === 'group' ? darkTheme.accent : darkTheme.fgMuted}
+            color={mode === 'group' ? colors.accent : colors.fgMuted}
           />
           <Text style={[styles.modeTabText, mode === 'group' && styles.modeTabTextActive]}>
             Group Chat
@@ -200,7 +203,7 @@ export const NewChatModalScreen = () => {
           <TextInput
             style={styles.groupInput}
             placeholder="Group Name (e.g. Friends, Project...)"
-            placeholderTextColor={darkTheme.fgMuted}
+            placeholderTextColor={colors.fgMuted}
             value={groupName}
             onChangeText={setGroupName}
           />
@@ -212,18 +215,18 @@ export const NewChatModalScreen = () => {
 
       {/* Search Input */}
       <View style={styles.searchBar}>
-        <Ionicons name="search" size={18} color={darkTheme.fgMuted} style={styles.searchIcon} />
+        <Ionicons name="search" size={18} color={colors.fgMuted} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search people by username..."
-          placeholderTextColor={darkTheme.fgMuted}
+          placeholderTextColor={colors.fgMuted}
           value={searchTerm}
           onChangeText={setSearchTerm}
           autoCapitalize="none"
         />
         {searchTerm.length > 0 && (
           <TouchableOpacity onPress={() => setSearchTerm('')}>
-            <Ionicons name="close-circle" size={18} color={darkTheme.fgMuted} />
+            <Ionicons name="close-circle" size={18} color={colors.fgMuted} />
           </TouchableOpacity>
         )}
       </View>
@@ -231,11 +234,11 @@ export const NewChatModalScreen = () => {
       {/* User List */}
       {isSearching ? (
         <View style={styles.centerBox}>
-          <ActivityIndicator size="small" color={darkTheme.accent} />
+          <ActivityIndicator size="small" color={colors.accentText} />
         </View>
       ) : displayedUsers.length === 0 ? (
         <View style={styles.centerBox}>
-          <Ionicons name="people-outline" size={40} color={darkTheme.fgMuted} />
+          <Ionicons name="people-outline" size={40} color={colors.fgMuted} />
           <Text style={styles.emptyText}>
             {searchTerm.trim() ? 'No users found matching query.' : 'No followers or following found.'}
           </Text>
@@ -275,7 +278,7 @@ export const NewChatModalScreen = () => {
                     {isSelected && <Ionicons name="checkmark" size={14} color="#ffffff" />}
                   </View>
                 ) : (
-                  <Ionicons name="chevron-forward" size={18} color={darkTheme.fgMuted} />
+                  <Ionicons name="chevron-forward" size={18} color={colors.fgMuted} />
                 )}
               </TouchableOpacity>
             );
@@ -286,13 +289,13 @@ export const NewChatModalScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: Theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: darkTheme.bg,
+    backgroundColor: colors.bg,
   },
   headerActionBtn: {
-    backgroundColor: darkTheme.accent,
+    backgroundColor: colors.accent,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 16,
@@ -305,8 +308,8 @@ const styles = StyleSheet.create({
   modeRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: darkTheme.border,
-    paddingHorizontal: 16,
+    borderBottomColor: colors.border,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 8,
   },
   modeTab: {
@@ -320,33 +323,33 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   modeTabActive: {
-    borderBottomColor: darkTheme.accent,
+    borderBottomColor: colors.accent,
   },
   modeTabText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     fontWeight: '600',
   },
   modeTabTextActive: {
-    color: darkTheme.fg,
+    color: colors.fg,
     fontWeight: '700',
   },
   groupInputContainer: {
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingTop: 12,
   },
   groupInput: {
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 10,
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
   },
   selectedCountText: {
-    color: darkTheme.accent,
+    color: colors.accentText,
     fontSize: 12,
     fontWeight: '600',
     marginTop: 6,
@@ -355,12 +358,12 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: darkTheme.surface,
+    backgroundColor: colors.surface,
     marginHorizontal: 16,
     marginVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: darkTheme.border,
+    borderColor: colors.border,
     paddingHorizontal: 12,
     height: 42,
   },
@@ -369,7 +372,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: darkTheme.fg,
+    color: colors.fg,
     fontSize: 14,
   },
   centerBox: {
@@ -379,7 +382,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   emptyText: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 14,
     textAlign: 'center',
     marginTop: 8,
@@ -387,22 +390,22 @@ const styles = StyleSheet.create({
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: metrics.gutter,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: darkTheme.border,
+    borderBottomColor: colors.border,
   },
   userRowInfo: {
     flex: 1,
     marginLeft: 12,
   },
   userName: {
-    color: darkTheme.fg,
-    fontSize: 15,
+    color: colors.fg,
+    fontSize: metrics.body,
     fontWeight: '700',
   },
   userHandle: {
-    color: darkTheme.fgMuted,
+    color: colors.fgMuted,
     fontSize: 12,
     marginTop: 2,
   },
@@ -411,12 +414,12 @@ const styles = StyleSheet.create({
     height: 22,
     borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: darkTheme.borderStrong,
+    borderColor: colors.borderStrong,
     justifyContent: 'center',
     alignItems: 'center',
   },
   checkboxSelected: {
-    backgroundColor: darkTheme.accent,
-    borderColor: darkTheme.accent,
+    backgroundColor: colors.accent,
+    borderColor: colors.accent,
   },
 });

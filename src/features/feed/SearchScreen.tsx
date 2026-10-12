@@ -1,3 +1,4 @@
+import { ScreenIntro } from '../../components/common/ScreenIntro';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -114,7 +115,7 @@ export const SearchScreen = () => {
         <Text style={[styles.username, { color: colors.fg }]}>{item.username}</Text>
         <Text style={[styles.handle, { color: colors.fgMuted }]}>@{item.username.toLowerCase()}</Text>
         {item.bio ? (
-          <Text style={[styles.bio, { color: colors.fgMuted }]} numberOfLines={1}>
+          <Text style={[styles.bio, { color: colors.fgMuted }]} numberOfLines={3}>
             {item.bio}
           </Text>
         ) : null}
@@ -148,7 +149,7 @@ export const SearchScreen = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      <Header title="Search" />
+      <Header title="Explore" />
 
       {/* Search Input Bar */}
       <View style={[styles.searchBarWrapper, { borderBottomColor: colors.border }]}>
@@ -156,7 +157,7 @@ export const SearchScreen = () => {
           <Ionicons name="search" size={18} color={colors.fgMuted} />
           <TextInput
             style={[styles.searchInput, { color: colors.fg }]}
-            placeholder="Search people, accounts, topics..."
+            placeholder="Find people by name or bio"
             placeholderTextColor={colors.fgSubtle}
             value={query}
             onChangeText={setQuery}
@@ -211,12 +212,13 @@ export const SearchScreen = () => {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.discoveryScrollContent}
         >
+          <ScreenIntro label="A wider circle" title="Find your people." description="A familiar interest. A different perspective." />
           {/* People You May Know Horizontal Carousel */}
           {suggestedUsers.length > 0 && (
             <View style={styles.suggestedSection}>
               <View style={styles.sectionTitleRow}>
                 <View style={styles.sectionTitleLeft}>
-                  <Ionicons name="people" size={17} color={colors.accent} />
+                  <Ionicons name="people" size={17} color={colors.accentText} />
                   <Text style={[styles.sectionTitleText, { color: colors.fg }]}>
                     Who to follow
                   </Text>
@@ -240,13 +242,13 @@ export const SearchScreen = () => {
           <View style={styles.discoverySection}>
             <View style={styles.sectionTitleRow}>
               <View style={styles.sectionTitleLeft}>
-                <Ionicons name="sparkles" size={17} color={colors.accent} />
+                <Ionicons name="sparkles" size={17} color={colors.accentText} />
                 <Text style={[styles.sectionTitleText, { color: colors.fg }]}>
                   Discover something new
                 </Text>
               </View>
               <Text style={[styles.sectionSubtitleText, { color: colors.fgSubtle }]}>
-                Trending & fresh
+                From the community
               </Text>
             </View>
 
@@ -292,21 +294,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   searchBarWrapper: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 20,
+    borderRadius: 14,
     paddingHorizontal: 14,
-    height: 42,
+    height: 50,
     gap: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: 15,
+    fontSize: 16,
   },
   resultsHeader: {
     flexDirection: 'row',
@@ -315,7 +317,7 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   sectionHeader: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingTop: 14,
     paddingBottom: 8,
     fontSize: 13,
@@ -358,7 +360,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     marginBottom: 10,
   },
   sectionTitleLeft: {
@@ -367,7 +369,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sectionTitleText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
     letterSpacing: -0.2,
   },
@@ -376,12 +378,12 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   horizontalUsersList: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     gap: 10,
   },
   suggestedUserCard: {
-    width: 110,
-    paddingVertical: 14,
+    width: 138,
+    paddingVertical: 20,
     paddingHorizontal: 8,
     borderRadius: 16,
     borderWidth: 1,
@@ -427,7 +429,7 @@ const styles = StyleSheet.create({
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
   },
@@ -436,7 +438,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   username: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '700',
   },
   handle: {
